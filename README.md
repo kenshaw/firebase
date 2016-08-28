@@ -1,6 +1,6 @@
 # About fireauth
 
-Package fireauth provides a way to generate v3.0.0+ Firebase jwt tokens using
+Package fireauth provides a simple Firebase v3.0.0+ JWT access tokens using
 credentials downloaded from the Firebase console.
 
 # Usage
@@ -27,7 +27,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// generate a token for with a user id ("uid") and specific auth data
+	// generate a token with a specified user id ("uid") and extra auth data
 	tok, err := auth.TokenString(
 		fireauth.UserID("a really cool user"),
 		fireauth.AuthData(map[string]interface{}{
