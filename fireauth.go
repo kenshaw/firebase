@@ -1,4 +1,4 @@
-// Package fireauth provides an access token generator for the Firebase v3.0.0+ API.
+// Package fireauth provides a simple access token generator for the Firebase v3.0.0+ API.
 package fireauth
 
 import (
