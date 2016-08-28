@@ -8,7 +8,8 @@ import (
 )
 
 func main() {
-	// read credentials from json
+	// create a Firebase auth token generator using a credentials file from
+	// disk. note that this can can be obtained from your Firebase console
 	auth, err := fireauth.New(
 		fireauth.CredentialsFile("./test-1470ffbcc1d8.json"),
 	)
@@ -16,7 +17,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// create a token for with a user id ("uid") and specific auth data
+	// generate a token for with a user id ("uid") and specific auth data
 	tok, err := auth.TokenString(
 		fireauth.UserID("a really cool user"),
 		fireauth.AuthData(map[string]interface{}{
