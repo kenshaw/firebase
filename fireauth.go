@@ -1,4 +1,4 @@
-// Package fireauth provides a simple way to create auth tokens for use with firebase v3.0.0+ API.
+// Package fireauth provides an access token generator for the Firebase v3.0.0+ API.
 package fireauth
 
 import (
@@ -11,7 +11,9 @@ import (
 )
 
 const (
-	claimAudience = "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit"
+	// Audience is the required value for the audience ("aud") field for
+	// Firebase.
+	Audience = "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit"
 
 	// DefaultExpirationDuration is the default expiration duration.
 	DefaultExpirationDuration time.Duration = 2 * time.Hour
@@ -100,12 +102,12 @@ func New(opts ...Option) (*fireauth, error) {
 	return f, nil
 }
 
-// Token generates a token with the provided options.
+// Token generates a token with the provided token options.
 func (f *fireauth) Token(opts ...TokenOption) ([]byte, error) {
 	tok := &Claims{
 		Issuer:   f.serviceAccountEmail,
 		Subject:  f.serviceAccountEmail,
-		Audience: claimAudience,
+		Audience: Audience,
 	}
 
 	now := time.Now()
@@ -135,7 +137,7 @@ func (f *fireauth) Token(opts ...TokenOption) ([]byte, error) {
 	return f.signer.Encode(tok)
 }
 
-// TokenString generates a token with the provided options.
+// TokenString generates a token with the provided token options.
 func (f *fireauth) TokenString(opts ...TokenOption) (string, error) {
 	buf, err := f.Token(opts...)
 	if err != nil {

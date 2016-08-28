@@ -31,7 +31,7 @@ func ServiceAccountEmail(email string) Option {
 
 // PEM is an Option that reads the key from pem.
 //
-// Note: please see knq/jwt.PEM for how to use this
+// Note: please see knq/jwt.PEM for information on using this.
 func PEM(pem jwt.PEM) Option {
 	return func(f *fireauth) error {
 		var err error
@@ -101,7 +101,8 @@ func CredentialsFile(path string) Option {
 	}
 }
 
-// ExpirationDuration is an Option that sets the expiration duration.
+// ExpirationDuration is an Option that sets the expiration duration for
+// generate tokens.
 func ExpirationDuration(d time.Duration) Option {
 	return func(f *fireauth) error {
 		if d != 0 {
@@ -116,7 +117,7 @@ func ExpirationDuration(d time.Duration) Option {
 	}
 }
 
-// IssuedAt is an option that sets whether or not the issued at ("iat") field
+// IssuedAt is an option that sets whether or not the Issued At ("iat") field
 // is set on the token.
 func IssuedAt(enable bool) Option {
 	return func(f *fireauth) error {
@@ -125,7 +126,7 @@ func IssuedAt(enable bool) Option {
 	}
 }
 
-// NotBefore is an option that sets whether or not the not before ("nbf") field
+// NotBefore is an option that sets whether or not the Not Before ("nbf") field
 // is set on the token.
 func NotBefore(enable bool) Option {
 	return func(f *fireauth) error {
@@ -144,10 +145,11 @@ func AuthUserID(uid string) Option {
 	}
 }
 
-// TokenOption represents a fireauth claims option.
+// TokenOption represents a fireauth claims option for generated tokens.
 type TokenOption func(*Claims)
 
-// UserID specifies (or overrides) the authenticated user id ("uid").
+// UserID is a token option that sets (overriding, if previously set via
+// AuthUserID) the authenticated user id ("uid").
 //
 // See also: AuthUserID
 func UserID(uid string) TokenOption {
@@ -156,7 +158,7 @@ func UserID(uid string) TokenOption {
 	}
 }
 
-// AuthData sets the extra authenticated claims data to v.
+// AuthData is a token option that sets the extra authenticated claims data to v.
 //
 // The data will be encoded into the token claims, and can be accessed via the
 // Firebase `auth` and `request.auth` security rules variables.
