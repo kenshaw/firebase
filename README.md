@@ -5,6 +5,9 @@ credentials downloaded from the Firebase console.
 
 # Usage
 
+Please see [the GoDoc page](http://godoc.org/github.com/knq/fireauth) for a
+full API listing.
+
 You can use the package like the following:
 
 ```go
