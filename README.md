@@ -1,7 +1,8 @@
 # About fireauth
 
-Package fireauth provides a simple Firebase v3.0.0+ JWT access tokens using
-credentials downloaded from the Firebase console.
+Package fireauth provides a simple JWT access token generator for the Firebase
+v3.0.0+ API that can be used with credentials downloaded from the Firebase
+console or manually specified.
 
 # Usage
 
