@@ -1,4 +1,4 @@
-package fireauth
+package tokgen
 
 import (
 	"encoding/json"
@@ -9,13 +9,13 @@ import (
 	"github.com/knq/jwt"
 )
 
-// Option represents a fireauth option.
-type Option func(*fireauth) error
+// Option represents a TokenGenerator option.
+type Option func(*TokenGenerator) error
 
 // ProjectID is an Option that sets the project id.
 func ProjectID(id string) Option {
-	return func(f *fireauth) error {
-		f.projectID = id
+	return func(tg *TokenGenerator) error {
+		tg.ProjectID = id
 		return nil
 	}
 }
@@ -23,8 +23,8 @@ func ProjectID(id string) Option {
 // ServiceAccountEmail is an Option that sets the service account email (ie,
 // the issuer and subject).
 func ServiceAccountEmail(email string) Option {
-	return func(f *fireauth) error {
-		f.serviceAccountEmail = email
+	return func(tg *TokenGenerator) error {
+		tg.ServiceAccountEmail = email
 		return nil
 	}
 }
@@ -33,9 +33,9 @@ func ServiceAccountEmail(email string) Option {
 //
 // Note: please see knq/jwt.PEM for information on using this.
 func PEM(pem jwt.PEM) Option {
-	return func(f *fireauth) error {
+	return func(tg *TokenGenerator) error {
 		var err error
-		f.signer, err = jwt.RS256.New(pem)
+		tg.Signer, err = jwt.RS256.New(pem)
 		return err
 	}
 }
@@ -44,7 +44,7 @@ func PEM(pem jwt.PEM) Option {
 // supplied JSON-encoded buf (ie, the contents of the JSON file downloaded from
 // the Firebase console).
 func CredentialsJSON(buf []byte) Option {
-	return func(f *fireauth) error {
+	return func(tg *TokenGenerator) error {
 		var err error
 
 		// the members to extract from the json data.
@@ -65,19 +65,19 @@ func CredentialsJSON(buf []byte) Option {
 		}
 
 		// set project id
-		err = ProjectID(vals.ProjectID)(f)
+		err = ProjectID(vals.ProjectID)(tg)
 		if err != nil {
 			return err
 		}
 
 		// set service account email
-		err = ServiceAccountEmail(vals.ClientEmail)(f)
+		err = ServiceAccountEmail(vals.ClientEmail)(tg)
 		if err != nil {
 			return err
 		}
 
 		// set private key
-		return PEM(jwt.PEM{[]byte(vals.PrivateKey)})(f)
+		return PEM(jwt.PEM{[]byte(vals.PrivateKey)})(tg)
 	}
 }
 
@@ -88,29 +88,29 @@ func CredentialsJSONString(str string) Option {
 	return CredentialsJSON([]byte(str))
 }
 
-// CredentialsFile is a fireauth Option that reads all the relevant settings
+// CredentialsFile is a TokenGenerator Option that reads all the relevant settings
 // from the supplied JSON-encoded file located at path.
 func CredentialsFile(path string) Option {
-	return func(f *fireauth) error {
+	return func(tg *TokenGenerator) error {
 		buf, err := ioutil.ReadFile(path)
 		if err != nil {
 			return err
 		}
 
-		return CredentialsJSON(buf)(f)
+		return CredentialsJSON(buf)(tg)
 	}
 }
 
 // ExpirationDuration is an Option that sets the expiration duration for
 // generate tokens.
 func ExpirationDuration(d time.Duration) Option {
-	return func(f *fireauth) error {
+	return func(tg *TokenGenerator) error {
 		if d != 0 {
-			f.enableExpiration = true
-			f.expirationDuration = d
+			tg.EnableExpiration = true
+			tg.ExpirationDuration = d
 		} else {
-			f.enableExpiration = false
-			f.expirationDuration = 0
+			tg.EnableExpiration = false
+			tg.ExpirationDuration = 0
 		}
 
 		return nil
@@ -120,8 +120,8 @@ func ExpirationDuration(d time.Duration) Option {
 // IssuedAt is an option that sets whether or not the Issued At ("iat") field
 // is set on the token.
 func IssuedAt(enable bool) Option {
-	return func(f *fireauth) error {
-		f.enableIssuedAt = enable
+	return func(tg *TokenGenerator) error {
+		tg.EnableIssuedAt = enable
 		return nil
 	}
 }
@@ -129,8 +129,8 @@ func IssuedAt(enable bool) Option {
 // NotBefore is an option that sets whether or not the Not Before ("nbf") field
 // is set on the token.
 func NotBefore(enable bool) Option {
-	return func(f *fireauth) error {
-		f.enableNotBefore = enable
+	return func(tg *TokenGenerator) error {
+		tg.EnableNotBefore = enable
 		return nil
 	}
 }
@@ -140,12 +140,12 @@ func NotBefore(enable bool) Option {
 // This will be copied on all subsequent calls to Token, and can be overridden
 // using the UserID TokenOption.
 func AuthUserID(uid string) Option {
-	return func(f *fireauth) error {
+	return func(tg *TokenGenerator) error {
 		return nil
 	}
 }
 
-// TokenOption represents a fireauth claims option for generated tokens.
+// TokenOption represents a TokenGenerator claims option for generated tokens.
 type TokenOption func(*Claims)
 
 // UserID is a token option that sets (overriding, if previously set via

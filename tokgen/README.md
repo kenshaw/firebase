@@ -1,3 +1,17 @@
+# About fireauth
+
+Package fireauth provides a simple JWT access token generator for the Firebase
+v3.0.0+ API that can be used with credentials downloaded from the Firebase
+console or manually specified.
+
+# Usage
+
+Please see [the GoDoc page](http://godoc.org/github.com/knq/fireauth) for a
+full API listing.
+
+You can use the package like the following:
+
+```go
 // example/example.go
 package main
 
@@ -33,3 +47,4 @@ func main() {
 	// now pass the token to the firebase API ...
 	// client, err := firebase.NewClient("https://<project>.firebaseio.com/", token, nil)
 }
+```

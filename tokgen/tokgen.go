@@ -1,5 +1,6 @@
-// Package fireauth provides a simple access token generator for the Firebase v3.0.0+ API.
-package fireauth
+// Package tokgen provides a Firebase v3.0.0+ compatible JWT access token
+// generator.
+package tokgen
 
 import (
 	"encoding/json"
@@ -11,15 +12,17 @@ import (
 )
 
 const (
-	// Audience is the required value for the audience ("aud") field for
+	// Audience is the required value for the JWT Audience ("aud") field for
 	// Firebase.
 	Audience = "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit"
 
-	// DefaultExpirationDuration is the default expiration duration.
-	DefaultExpirationDuration time.Duration = 2 * time.Hour
+	// DefaultTokenExpirationDuration is the default expiration duration.
+	DefaultTokenExpirationDuration time.Duration = 2 * time.Hour
 )
 
 // Claims is the JWT payload claims for a Firebase access token.
+//
+// Mostly copied from knq/jwt.Claims.
 type Claims struct {
 	// Issuer ("iss") identifies the principal that issued the JWT.
 	Issuer string `json:"iss,omitempty"`
@@ -54,59 +57,60 @@ type Claims struct {
 	Claims interface{} `json:"claims,omitempty"`
 }
 
-// fireauth wraps a token signer with the required data.
-type fireauth struct {
-	signer jwt.Signer
+// TokenGenerator wraps a jwt.Signer using the appropriate claims for a Firebase token.
+type TokenGenerator struct {
+	Signer jwt.Signer
 
-	projectID           string
-	serviceAccountEmail string
+	ProjectID           string
+	ServiceAccountEmail string
 
-	enableExpiration bool
-	enableIssuedAt   bool
-	enableNotBefore  bool
+	EnableExpiration bool
+	EnableIssuedAt   bool
+	EnableNotBefore  bool
 
-	expirationDuration time.Duration
+	ExpirationDuration time.Duration
 }
 
-// New creates a new fireauth using the provided options.
-func New(opts ...Option) (*fireauth, error) {
+// New creates a new TokenGenerator using the provided options.
+func New(opts ...Option) (*TokenGenerator, error) {
 	var err error
 
-	// default options
-	f := &fireauth{
-		enableExpiration: true,
-		enableIssuedAt:   true,
-		enableNotBefore:  true,
+	// defaults
+	tg := &TokenGenerator{
+		EnableExpiration: true,
+		EnableIssuedAt:   true,
+		EnableNotBefore:  true,
 
-		expirationDuration: DefaultExpirationDuration,
+		ExpirationDuration: DefaultTokenExpirationDuration,
 	}
 
 	// apply options
 	for _, o := range opts {
-		err = o(f)
+		err = o(tg)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	// check that signer is defined
-	if f.signer == nil {
+	if tg.Signer == nil {
 		return nil, errors.New("no private key was provided")
 	}
 
 	// check issuer and subject
-	if f.serviceAccountEmail == "" {
+	if tg.ServiceAccountEmail == "" {
 		return nil, errors.New("no service account email was provided")
 	}
 
-	return f, nil
+	return tg, nil
 }
 
-// Token generates a token with the provided token options.
-func (f *fireauth) Token(opts ...TokenOption) ([]byte, error) {
+// Token generates a token from the token generator configuration with the
+// provided token options.
+func (tg *TokenGenerator) Token(opts ...TokenOption) ([]byte, error) {
 	tok := &Claims{
-		Issuer:   f.serviceAccountEmail,
-		Subject:  f.serviceAccountEmail,
+		Issuer:   tg.ServiceAccountEmail,
+		Subject:  tg.ServiceAccountEmail,
 		Audience: Audience,
 	}
 
@@ -114,17 +118,17 @@ func (f *fireauth) Token(opts ...TokenOption) ([]byte, error) {
 	n := json.Number(strconv.FormatInt(now.Unix(), 10))
 
 	// set expiration
-	if f.enableExpiration {
-		tok.Expiration = json.Number(strconv.FormatInt(now.Add(f.expirationDuration).Unix(), 10))
+	if tg.EnableExpiration {
+		tok.Expiration = json.Number(strconv.FormatInt(now.Add(tg.ExpirationDuration).Unix(), 10))
 	}
 
 	// set issued at
-	if f.enableIssuedAt {
+	if tg.EnableIssuedAt {
 		tok.IssuedAt = n
 	}
 
 	//  set not before
-	if f.enableNotBefore {
+	if tg.EnableNotBefore {
 		tok.NotBefore = n
 	}
 
@@ -134,12 +138,12 @@ func (f *fireauth) Token(opts ...TokenOption) ([]byte, error) {
 	}
 
 	// encode
-	return f.signer.Encode(tok)
+	return tg.Signer.Encode(tok)
 }
 
-// TokenString generates a token with the provided token options.
-func (f *fireauth) TokenString(opts ...TokenOption) (string, error) {
-	buf, err := f.Token(opts...)
+// TokenString generates a token from the provided token generator configuration as a string the provided token options.
+func (tg *TokenGenerator) TokenString(opts ...TokenOption) (string, error) {
+	buf, err := tg.Token(opts...)
 	if err != nil {
 		return "", err
 	}
