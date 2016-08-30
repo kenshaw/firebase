@@ -69,6 +69,8 @@ type TokenGenerator struct {
 	EnableNotBefore  bool
 
 	ExpirationDuration time.Duration
+
+	UserID string
 }
 
 // New creates a new TokenGenerator using the provided options.
@@ -79,7 +81,6 @@ func New(opts ...Option) (*TokenGenerator, error) {
 	tg := &TokenGenerator{
 		EnableExpiration: true,
 		EnableIssuedAt:   true,
-		EnableNotBefore:  true,
 
 		ExpirationDuration: DefaultTokenExpirationDuration,
 	}
@@ -130,6 +131,11 @@ func (tg *TokenGenerator) Token(opts ...TokenOption) ([]byte, error) {
 	//  set not before
 	if tg.EnableNotBefore {
 		tok.NotBefore = n
+	}
+
+	// set user id
+	if tg.UserID != "" {
+		tok.UserID = tg.UserID
 	}
 
 	// apply options

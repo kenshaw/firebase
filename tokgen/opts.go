@@ -141,7 +141,7 @@ func NotBefore(enable bool) Option {
 // using the UserID TokenOption.
 func AuthUserID(uid string) Option {
 	return func(tg *TokenGenerator) error {
-		return nil
+		tg.UserID = uid
 	}
 }
 
