@@ -16,6 +16,8 @@ import (
 )
 
 const (
+	// DefaultWatchBuffer is the default length of an event channel created on
+	// a call to Watch.
 	DefaultWatchBuffer = 64
 )
 

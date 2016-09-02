@@ -13,17 +13,45 @@ type EventType string
 
 const (
 	// firebase SSE events
-	EventTypePut         EventType = "put"
-	EventTypePatch       EventType = "patch"
-	EventTypeKeepAlive   EventType = "keep-alive"
-	EventTypeCancel      EventType = "cancel"
+
+	// EventTypePut is the event type sent when new data is inserted to the
+	// Firebase ref.
+	EventTypePut EventType = "put"
+
+	// EventTypePatch is the event type sent when data at the Firebase ref is
+	// updated.
+	EventTypePatch EventType = "patch"
+
+	// EventTypeKeepAlive is the event type sent when a keep alive is
+	// encountered.
+	EventTypeKeepAlive EventType = "keep-alive"
+
+	// EventTypeCancel is the event type sent when the Firebase security rules
+	// on the watched ref are altered to no longer allow the auth token to read
+	// it.
+	EventTypeCancel EventType = "cancel"
+
+	// EventTypeAuthRevoked is the event type sent when the auth token is
+	// revoked or expired.
 	EventTypeAuthRevoked EventType = "auth_revoked"
 
 	// synthesized events
-	EventTypeClosed              EventType = "closed"
-	EventTypeUnknownError        EventType = "unknown_error"
+
+	// EventTypeClosed is the event type sent when the connection with the
+	// Firebase server is closed.
+	EventTypeClosed EventType = "closed"
+
+	// EventTypeUnknownError is the event type sent when an unknown error is
+	// encountered.
+	EventTypeUnknownError EventType = "unknown_error"
+
+	// EventTypeMalformedEventError is the event type sent when a malformed
+	// event is read from the Firebase server.
 	EventTypeMalformedEventError EventType = "malformed_event_error"
-	EventTypeMalformedDataError  EventType = "malformed_data_error"
+
+	// EventTypeMalformedDataError is the event type sent when malformed data
+	// is read from the Firebase server.
+	EventTypeMalformedDataError EventType = "malformed_data_error"
 )
 
 // String satisfies the stringer interface.
