@@ -51,6 +51,11 @@ func (st ServerTimestamp) Time() time.Time {
 	return time.Time(st)
 }
 
+// String satisfies the stringer interface.
+func (st ServerTimestamp) String() string {
+	return time.Time(st).String()
+}
+
 // Error is a general Firebase error.
 type Error struct {
 	Err string `json:"error"`

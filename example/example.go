@@ -1,13 +1,3 @@
-# About firebase
-
-Package firebase provides a Firebase v3.0.0+ compatible API.
-
-## Usage
-
-Please see [the GoDoc API page](http://godoc.org/github.com/knq/firebase) for a
-full API listing.
-
-```go
 // example/example.go
 package main
 
@@ -133,4 +123,3 @@ func startWatch(r *firebase.Ref, ctxt context.Context) {
 		}
 	}
 }
-```
