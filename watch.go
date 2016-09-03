@@ -153,13 +153,13 @@ func Watch(r *Ref, ctxt context.Context, opts ...QueryOption) (<-chan *Event, er
 		rdr := bufio.NewReader(res.Body)
 
 		var errEvent *Event
-		var line, data []byte
+		var typ, data []byte
 
 		for {
 			select {
 			default:
 				// read line "event: <event>"
-				line, errEvent = readLine(rdr, watchEventPrefix, EventTypeMalformedEventError)
+				typ, errEvent = readLine(rdr, watchEventPrefix, EventTypeMalformedEventError)
 				if errEvent != nil {
 					events <- errEvent
 					close(events)
@@ -176,7 +176,7 @@ func Watch(r *Ref, ctxt context.Context, opts ...QueryOption) (<-chan *Event, er
 
 				// emit event
 				events <- &Event{
-					Type: EventType(line),
+					Type: EventType(typ),
 					Data: data,
 				}
 
