@@ -223,11 +223,13 @@ func Listen(r *Ref, ctxt context.Context, eventTypes []EventType, opts ...QueryO
 					return
 				}
 
-				// filter events
+				// consume events
 				for e := range ev {
 					if e == nil {
 						break watchLoop
 					}
+
+					// filter
 					for _, typ := range eventTypes {
 						if typ == e.Type {
 							events <- e

@@ -2,10 +2,11 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"log"
 	"time"
+
+	"golang.org/x/net/context"
 
 	"github.com/knq/firebase"
 )
