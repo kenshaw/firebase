@@ -199,3 +199,48 @@ func Watch(r *Ref, ctxt context.Context, opts ...QueryOption) (<-chan *Event, er
 
 	return events, nil
 }
+
+// Listen listens for specified eventTypes on the Firebase ref and emits them
+// on the returned channel. Ends only when the context is done. If the Firebase
+// connection closes, or the auth token is revoked, then a new connection to
+// Firebase will be made.
+//
+// Additionally, it should be noted that the events channel will be closed if
+// there is an underlying connectivity issue such as an inability to
+// authenticate a OAuth2 token.
+func Listen(r *Ref, ctxt context.Context, eventTypes []EventType, opts ...QueryOption) <-chan *Event {
+	events := make(chan *Event, r.watchBufLen)
+
+	go func() {
+		for {
+		watchLoop:
+			select {
+			default:
+				// setup watch
+				ev, err := Watch(r, ctxt, opts...)
+				if err != nil {
+					close(events)
+					return
+				}
+
+				// filter events
+				for e := range ev {
+					if e == nil {
+						break watchLoop
+					}
+					for _, typ := range eventTypes {
+						if typ == e.Type {
+							events <- e
+						}
+					}
+				}
+
+			case <-ctxt.Done():
+				close(events)
+				return
+			}
+		}
+	}()
+
+	return events
+}

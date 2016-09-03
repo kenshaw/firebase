@@ -224,7 +224,16 @@ func (r *Ref) SetRules(v interface{}) error {
 }
 
 // Watch watches a Firebase ref for events, emitting them on returned channel.
-// Will end when the passed context is done.
-func (r *Ref) Watch(ctxt context.Context) (<-chan *Event, error) {
-	return Watch(r, ctxt)
+// Will end when the passed context is done or when the Firebase connection is
+// closed.
+func (r *Ref) Watch(ctxt context.Context, opts ...QueryOption) (<-chan *Event, error) {
+	return Watch(r, ctxt, opts...)
+}
+
+// Listen listens for specified eventTypes on the Firebase ref and emits them
+// on the returned channel. Ends only when the context is done. If the Firebase
+// connection closes, or the auth token is revoked, then a new connection to
+// Firebase will be made.
+func (r *Ref) Listen(ctxt context.Context, eventTypes []EventType, opts ...QueryOption) <-chan *Event {
+	return Listen(r, ctxt, eventTypes, opts...)
 }
