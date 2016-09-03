@@ -48,7 +48,9 @@ func NewDatabaseRef(opts ...Option) (*Ref, error) {
 	for _, o := range opts {
 		err = o(r)
 		if err != nil {
-			return nil, fmt.Errorf("firebase: could not create database ref: %v", err)
+			return nil, &Error{
+				Err: fmt.Sprintf("could not create database ref: %v", err),
+			}
 		}
 	}
 
@@ -100,6 +102,47 @@ func (r *Ref) createRequest(method string, body io.Reader, opts ...QueryOption) 
 
 	// create request
 	return http.NewRequest(method, u, body)
+}
+
+// clientAndRequest creates a *http.Client and *http.Request for the Firebase
+// ref.
+func (r *Ref) clientAndRequest(method string, body io.Reader, opts ...QueryOption) (*http.Client, *http.Request, error) {
+	var err error
+
+	// get client
+	client, err := r.httpClient()
+	if err != nil {
+		return nil, nil, &Error{
+			Err: fmt.Sprintf("could not create client: %v", err),
+		}
+	}
+
+	// create request
+	req, err := r.createRequest(method, body, opts...)
+	if err != nil {
+		return nil, nil, &Error{
+			Err: fmt.Sprintf("could not create request: %v", err),
+		}
+	}
+
+	return client, req, nil
+}
+
+// AddClaim adds a claim to the Firebase ref token source.
+func (r *Ref) AddClaim(field string, v interface{}) error {
+	r.rw.Lock()
+	defer r.rw.Unlock()
+
+	if r.auth == nil {
+		return &Error{
+			Err: "ref does not have an initialized auth token source",
+		}
+	}
+
+	r.auth.AddClaim(field, v)
+	r.source = oauth2.ReuseTokenSource(nil, r.auth)
+
+	return nil
 }
 
 // Ref duplicates the ref, but locking it to a sub Firebase ref at path.
@@ -181,7 +224,7 @@ func (r *Ref) SetRules(v interface{}) error {
 }
 
 // Watch watches a Firebase ref for events, emitting them on returned channel.
-// Will end when the passed context is canceled.
+// Will end when the passed context is done.
 func (r *Ref) Watch(ctxt context.Context) (<-chan *Event, error) {
 	return Watch(r, ctxt)
 }

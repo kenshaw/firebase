@@ -75,27 +75,72 @@ const (
 	watchDataPrefix  = "data: "
 )
 
+// readLine reads a line from a reader, synthesizing the provided event type if
+// there was an error or the line is missing the supplied prefix.
+func readLine(rdr *bufio.Reader, prefix string, errEventType EventType) ([]byte, *Event) {
+	// read event: line
+	line, err := rdr.ReadBytes('\n')
+	if err == io.EOF {
+		return nil, &Event{
+			Type: EventTypeClosed,
+			Data: []byte("connection closed"),
+		}
+	} else if err != nil {
+		return nil, &Event{
+			Type: EventTypeUnknownError,
+			Data: []byte(err.Error()),
+		}
+	}
+
+	// empty line check for empty prefix
+	if len(prefix) == 0 {
+		line = bytes.TrimSpace(line)
+		if len(line) != 0 {
+			return nil, &Event{
+				Type: errEventType,
+				Data: []byte("expected empty line"),
+			}
+		}
+		return line, nil
+	}
+
+	// check line has event prefix
+	if !bytes.HasPrefix(line, []byte(prefix)) {
+		return nil, &Event{
+			Type: errEventType,
+			Data: []byte("missing prefix"),
+		}
+	}
+
+	// trim space
+	return bytes.TrimSpace(line[len([]byte(prefix)):]), nil
+}
+
 // Watch watches a Firebase ref for events, emitting them on returned channel.
 // Will end when the passed context is canceled or when the remote connection
 // is closed.
 func Watch(r *Ref, ctxt context.Context, opts ...QueryOption) (<-chan *Event, error) {
-	// get client
-	client, err := r.httpClient()
+	var err error
+
+	// get client and request
+	client, req, err := r.clientAndRequest("GET", nil, opts...)
 	if err != nil {
-		return nil, fmt.Errorf("firebase: could not create client: %v", err)
+		return nil, err
 	}
 
-	// create request
-	req, err := r.createRequest("GET", nil, opts...)
-	if err != nil {
-		return nil, fmt.Errorf("firebase: could not create request: %v", err)
-	}
-
-	// set headers
+	// set request headers
 	req.Header.Add("Accept", "text/event-stream")
 
 	// execute
 	res, err := client.Do(req)
+	if err != nil {
+		return nil, &Error{
+			Err: fmt.Sprintf("could not execute request: %v", err),
+		}
+	}
+
+	// check server error
+	err = checkServerError(res)
 	if err != nil {
 		return nil, err
 	}
@@ -107,67 +152,38 @@ func Watch(r *Ref, ctxt context.Context, opts ...QueryOption) (<-chan *Event, er
 		// create reader
 		rdr := bufio.NewReader(res.Body)
 
+		var errEvent *Event
+		var line, data []byte
+
 		for {
 			select {
 			default:
-				// read event: line
-				line, err := rdr.ReadBytes('\n')
-				if err == io.EOF {
-					events <- &Event{Type: EventTypeClosed}
-					close(events)
-					return
-				} else if err != nil {
-					events <- &Event{Type: EventTypeUnknownError, Data: []byte(err.Error())}
+				// read line "event: <event>"
+				line, errEvent = readLine(rdr, watchEventPrefix, EventTypeMalformedEventError)
+				if errEvent != nil {
+					events <- errEvent
 					close(events)
 					return
 				}
 
-				// check line has event prefix
-				if !bytes.HasPrefix(line, []byte(watchEventPrefix)) {
-					events <- &Event{Type: EventTypeMalformedEventError}
-					close(events)
-					return
-				}
-
-				// read data: line
-				data, err := rdr.ReadBytes('\n')
-				if err == io.EOF {
-					events <- &Event{Type: EventTypeClosed}
-					close(events)
-					return
-				} else if err != nil {
-					events <- &Event{Type: EventTypeUnknownError, Data: []byte(err.Error())}
-					close(events)
-					return
-				}
-
-				// check data has event prefix
-				if !bytes.HasPrefix(data, []byte(watchDataPrefix)) {
-					events <- &Event{Type: EventTypeMalformedDataError}
+				// read line "data: <data>"
+				data, errEvent = readLine(rdr, watchDataPrefix, EventTypeMalformedDataError)
+				if errEvent != nil {
+					events <- errEvent
 					close(events)
 					return
 				}
 
 				// emit event
 				events <- &Event{
-					Type: EventType(bytes.TrimSpace(line[len(watchEventPrefix):])),
-					Data: bytes.TrimSpace(data[len(watchDataPrefix):]),
+					Type: EventType(line),
+					Data: data,
 				}
 
 				// consume empty line
-				empty, err := rdr.ReadBytes('\n')
-				if err == io.EOF {
-					events <- &Event{Type: EventTypeClosed}
-					close(events)
-					return
-				} else if err != nil {
-					events <- &Event{Type: EventTypeUnknownError, Data: []byte(err.Error())}
-					close(events)
-					return
-				}
-				empty = bytes.TrimSpace(empty)
-				if len(empty) > 0 {
-					events <- &Event{Type: EventTypeUnknownError, Data: []byte(fmt.Sprintf("expected empty line, got: %s", string(empty)))}
+				_, errEvent = readLine(rdr, "", EventTypeUnknownError)
+				if errEvent != nil {
+					events <- errEvent
 					close(events)
 					return
 				}

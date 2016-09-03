@@ -5,29 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"net/http"
 )
-
-// DoRawRequest performs a raw request against Firebase ref r, with the
-// supplied body and request options.
-func DoRawRequest(method string, r *Ref, body io.Reader, opts ...QueryOption) (*http.Response, error) {
-	var err error
-
-	// get client
-	client, err := r.httpClient()
-	if err != nil {
-		return nil, fmt.Errorf("firebase: could not create client: %v", err)
-	}
-
-	// create request
-	req, err := r.createRequest(method, body, opts...)
-	if err != nil {
-		return nil, fmt.Errorf("firebase: could not create request: %v", err)
-	}
-
-	return client.Do(req)
-}
 
 // DoRequest does a request against Firebase ref r with the supplied values v,
 // decoding the response to d.
@@ -39,36 +17,32 @@ func DoRequest(method string, r *Ref, v, d interface{}, opts ...QueryOption) err
 	if v != nil {
 		buf, err := json.Marshal(v)
 		if err != nil {
-			return fmt.Errorf("firebase: could not marshal json: %v", err)
+			return &Error{
+				Err: fmt.Sprintf("could not marshal json: %v", err),
+			}
 		}
 		body = bytes.NewReader(buf)
 	}
 
-	// do request
-	res, err := DoRawRequest(method, r, body, opts...)
+	// create client and request
+	client, req, err := r.clientAndRequest(method, body, opts...)
 	if err != nil {
 		return err
 	}
+
+	// do request
+	res, err := client.Do(req)
+	if err != nil {
+		return &Error{
+			Err: fmt.Sprintf("could not execute request: %v", err),
+		}
+	}
 	defer res.Body.Close()
 
-	// some kind of server error
-	if res.StatusCode < 200 || res.StatusCode > 299 {
-		buf, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return fmt.Errorf("firebase: could not read server error: %v", err)
-		}
-
-		var se ServerError
-		err = json.Unmarshal(buf, &se)
-		if err != nil && len(buf) > 0 {
-			return &ServerError{
-				Err: fmt.Sprintf("%s (%d)", string(buf), res.StatusCode),
-			}
-		} else if err != nil {
-			return fmt.Errorf("firebase: could not decode server error: %v", err)
-		}
-
-		return &se
+	// check for server error
+	err = checkServerError(res)
+	if err != nil {
+		return err
 	}
 
 	// decode body to d
@@ -77,7 +51,9 @@ func DoRequest(method string, r *Ref, v, d interface{}, opts ...QueryOption) err
 		dec.UseNumber()
 		err = dec.Decode(d)
 		if err != nil {
-			return fmt.Errorf("firebase: could not unmarshal json: %v", err)
+			return &Error{
+				Err: fmt.Sprintf("could not unmarshal json: %v", err),
+			}
 		}
 	}
 
@@ -102,7 +78,9 @@ func Push(r *Ref, v interface{}) (string, error) {
 
 	err := DoRequest("POST", r, v, &res)
 	if err != nil {
-		return "", err
+		return "", &Error{
+			Err: fmt.Sprintf("could not push: %v", err),
+		}
 	}
 
 	return res.Name, nil
@@ -123,7 +101,9 @@ func GetRules(r *Ref) ([]byte, error) {
 	var d json.RawMessage
 	err := DoRequest("GET", r.Ref("/.settings/rules"), nil, &d)
 	if err != nil {
-		return nil, err
+		return nil, &Error{
+			Err: fmt.Sprintf("could not retrieve rules: %v", err),
+		}
 	}
 	return []byte(d), nil
 }

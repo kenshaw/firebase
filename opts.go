@@ -3,7 +3,7 @@ package firebase
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
@@ -31,7 +31,9 @@ func URL(urlstr string) Option {
 	return func(r *Ref) error {
 		u, err := url.Parse(urlstr)
 		if err != nil {
-			return err
+			return &Error{
+				Err: fmt.Sprintf("could not parse url: %v", err),
+			}
 		}
 
 		r.url = u
@@ -72,12 +74,16 @@ func GoogleServiceAccountCredentialsJSON(buf []byte) Option {
 		// decode settings into v
 		err = json.Unmarshal(buf, &v)
 		if err != nil {
-			return err
+			return &Error{
+				Err: fmt.Sprintf("could not unmarshal service account credentials: %v", err),
+			}
 		}
 
 		// simple check
 		if v.ProjectID == "" || v.ClientEmail == "" || v.PrivateKey == "" {
-			return errors.New("service account credentials missing project_id, client_email or private_key")
+			return &Error{
+				Err: "google service account credentials missing project_id, client_email or private_key",
+			}
 		}
 
 		// set URL
@@ -89,17 +95,21 @@ func GoogleServiceAccountCredentialsJSON(buf []byte) Option {
 		// create token signer
 		signer, err := jwt.RS256.New(jwt.PEM{[]byte(v.PrivateKey)})
 		if err != nil {
-			return err
+			return &Error{
+				Err: fmt.Sprintf("could not create jwt signer for auth token source: %v", err),
+			}
 		}
 
-		// create jwt bearer grant token source
+		// create auth token source
 		r.auth, err = oauth2util.JWTBearerGrantTokenSource(
 			signer, v.TokenURI, context.Background(),
 			oauth2util.ExpiresIn(DefaultTokenExpiration),
 			oauth2util.IssuedAt(true),
 		)
 		if err != nil {
-			return err
+			return &Error{
+				Err: fmt.Sprintf("could not create auth token source: %v", err),
+			}
 		}
 
 		// add the claims for firebase
@@ -126,42 +136,26 @@ func GoogleServiceAccountCredentialsFile(path string) Option {
 	return func(r *Ref) error {
 		buf, err := ioutil.ReadFile(path)
 		if err != nil {
-			return err
+			return &Error{
+				Err: fmt.Sprintf("could not read google service account credentials file: %v", err),
+			}
 		}
 
 		return GoogleServiceAccountCredentialsJSON(buf)(r)
 	}
 }
 
-// WithClaims is an option that adds additional claims to the token source.
-func WithClaims(claims map[string]interface{}) Option {
-	return func(r *Ref) error {
-		r.rw.Lock()
-		defer r.rw.Unlock()
-
-		if r.auth == nil {
-			return errors.New("auth was not previously initialized")
-		}
-
-		r.auth.AddClaim("claims", claims)
-		r.source = oauth2.ReuseTokenSource(nil, r.auth)
-		return nil
-	}
-}
-
 // UserID is an option that sets the auth "uid".
 func UserID(uid string) Option {
 	return func(r *Ref) error {
-		r.rw.Lock()
-		defer r.rw.Unlock()
+		return r.AddClaim("uid", uid)
+	}
+}
 
-		if r.auth == nil {
-			return errors.New("auth was not previously initialized")
-		}
-
-		r.auth.AddClaim("uid", uid)
-		r.source = oauth2.ReuseTokenSource(nil, r.auth)
-		return nil
+// WithClaims is an option that adds additional claims to the token source.
+func WithClaims(claims map[string]interface{}) Option {
+	return func(r *Ref) error {
+		return r.AddClaim("claims", claims)
 	}
 }
 
@@ -225,7 +219,9 @@ func jsonQuery(name string, val interface{}) QueryOption {
 	return func(v url.Values) error {
 		buf, err := json.Marshal(val)
 		if err != nil {
-			return err
+			return &Error{
+				Err: fmt.Sprintf("could not marshal query option: %v", err),
+			}
 		}
 		v.Add(name, string(buf))
 		return nil

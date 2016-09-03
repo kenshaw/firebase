@@ -1,6 +1,10 @@
 package firebase
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strconv"
 	"time"
 )
@@ -47,12 +51,43 @@ func (st ServerTimestamp) Time() time.Time {
 	return time.Time(st)
 }
 
-// ServerError is a Firebase server error.
-type ServerError struct {
+// Error is a general Firebase error.
+type Error struct {
 	Err string `json:"error"`
 }
 
 // Error satisifies the error interface.
-func (se ServerError) Error() string {
-	return "firebase: got server error: " + se.Err
+func (e *Error) Error() string {
+	return "firebase: " + e.Err
+}
+
+// checkServerError looks at a http.Response and determines if it encountered
+// an error, and marshals the error into a Error if it did.
+func checkServerError(res *http.Response) error {
+	// some kind of server error
+	if res.StatusCode < 200 || res.StatusCode > 299 {
+		buf, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return &Error{
+				Err: fmt.Sprintf("unable to read server error: %v", err),
+			}
+		}
+		if len(buf) < 1 {
+			return &Error{
+				Err: fmt.Sprintf("empty server error: %s (%d)", res.Status, res.StatusCode),
+			}
+		}
+
+		var e Error
+		err = json.Unmarshal(buf, &e)
+		if err != nil {
+			return &Error{
+				Err: fmt.Sprintf("unknown server error: %s (%d)", string(buf), res.StatusCode),
+			}
+		}
+
+		return &e
+	}
+
+	return nil
 }
