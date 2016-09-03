@@ -3,9 +3,10 @@ package firebase
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"fmt"
 	"io"
+
+	"golang.org/x/net/context"
 )
 
 // EventType is a Firebase event type.

@@ -1,7 +1,6 @@
 package firebase
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -12,10 +11,11 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2"
+
 	"github.com/knq/jwt"
 	"github.com/knq/oauth2util"
-
-	"golang.org/x/oauth2"
 )
 
 const (

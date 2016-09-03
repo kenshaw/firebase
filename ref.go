@@ -2,7 +2,6 @@
 package firebase
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,6 +9,7 @@ import (
 	"strings"
 	"sync"
 
+	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 
 	"github.com/knq/oauth2util"
