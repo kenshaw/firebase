@@ -226,69 +226,68 @@ func PrintPretty(v url.Values) error {
 	return nil
 }
 
-// jsonQuery is a query option that adds name as a JSON encoded value with val.
-func jsonQuery(name string, val interface{}) QueryOption {
-	return func(v url.Values) error {
-		buf, err := json.Marshal(val)
-		if err != nil {
-			return &Error{
-				Err: fmt.Sprintf("could not marshal query option: %v", err),
-			}
+// jsonQuery returns a QueryOption for a field and json encodes the val.
+func jsonQuery(field string, val interface{}) QueryOption {
+	// json encode
+	buf, err := json.Marshal(val)
+	if err != nil {
+		err = &Error{
+			Err: fmt.Sprintf("could not marshal query option: %v", err),
 		}
-		v.Add(name, string(buf))
+	}
+
+	return func(v url.Values) error {
+		if err != nil {
+			return err
+		}
+
+		v.Add(field, string(buf))
+		return nil
+	}
+}
+
+// uintQuery returns a QueryOption for a field that converts n into a string.
+func uintQuery(field string, n uint) QueryOption {
+	val := strconv.FormatUint(uint64(n), 10)
+	return func(v url.Values) error {
+		v.Add(field, val)
 		return nil
 	}
 }
 
 // OrderBy is a query option that sets Firebase's returned result order.
 func OrderBy(field string) QueryOption {
-	return func(v url.Values) error {
-		return jsonQuery("orderBy", field)(v)
-	}
+	return jsonQuery("orderBy", field)
 }
 
 // EqualTo is a query option that sets the order by filter to equalTo val.
 func EqualTo(val interface{}) QueryOption {
-	return func(v url.Values) error {
-		return jsonQuery("equalTo", val)(v)
-	}
+	return jsonQuery("equalTo", val)
 }
 
 // StartAt is a query option that sets the order by filter to startAt val.
 func StartAt(val interface{}) QueryOption {
-	return func(v url.Values) error {
-		return jsonQuery("startAt", val)(v)
-	}
+	return jsonQuery("startAt", val)
 }
 
 // EndAt is a query option that sets the order by filter to endAt val.
 func EndAt(val interface{}) QueryOption {
-	return func(v url.Values) error {
-		return jsonQuery("endAt", val)(v)
-	}
+	return jsonQuery("endAt", val)
+}
+
+// AuthOverride is a query option that sets the auth_variable_override.
+func AuthOverride(val interface{}) QueryOption {
+	return jsonQuery("auth_variable_override", val)
 }
 
 // LimitToFirst is a query option that limit's Firebase's returned results to
 // the first n items.
 func LimitToFirst(n uint) QueryOption {
-	return func(v url.Values) error {
-		v.Add("limitToFirst", strconv.FormatUint(uint64(n), 10))
-		return nil
-	}
+	return uintQuery("limitToFirst", n)
 }
 
 // LimitToLast is a query option that limit's Firebase's returned results to
 // the last n items.
 func LimitToLast(n uint) QueryOption {
-	return func(v url.Values) error {
-		v.Add("limitToLast", strconv.FormatUint(uint64(n), 10))
-		return nil
-	}
-}
-
-// AuthOverride is a query option that sets the auth_variable_override.
-func AuthOverride(val interface{}) QueryOption {
-	return func(v url.Values) error {
-		return jsonQuery("auth_variable_override", val)(v)
-	}
+	return uintQuery("limitToLast", n)
 }
