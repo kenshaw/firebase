@@ -158,9 +158,11 @@ func DefaultQueryOptions(opts ...QueryOption) Option {
 // auth_variable_override on the ref.
 func UserID(uid string) Option {
 	return func(r *Ref) error {
-		return DefaultQueryOptions(AuthOverride(map[string]interface{}{
-			"uid": uid,
-		}))(r)
+		return DefaultQueryOptions(
+			AuthOverride(map[string]interface{}{
+				"uid": uid,
+			}),
+		)(r)
 	}
 }
 
