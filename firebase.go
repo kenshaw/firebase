@@ -95,17 +95,34 @@ func Remove(r *Ref) error {
 	return DoRequest("DELETE", r, nil, nil)
 }
 
-// GetRules retrieves the security rules for Firebase reference r.
-func GetRules(r *Ref) ([]byte, error) {
+// SetRules sets the security rules for Firebase reference r.
+func SetRules(r *Ref, v interface{}) error {
+	return DoRequest("PUT", r.Ref("/.settings/rules"), v, nil)
+}
+
+// SetRulesJSON sets the JSON-encoded security rules for Firebase reference r.
+func SetRulesJSON(r *Ref, buf []byte) error {
+	var v interface{}
+
+	// decode
+	d := json.NewDecoder(bytes.NewReader(buf))
+	d.UseNumber()
+	err := d.Decode(&v)
+	if err != nil {
+		return &Error{
+			Err: fmt.Sprintf("could not unmarshal json: %v", err),
+		}
+	}
+
+	return DoRequest("PUT", r.Ref("/.settings/rules"), v, nil)
+}
+
+// GetRulesJSON retrieves the security rules for Firebase reference r.
+func GetRulesJSON(r *Ref) ([]byte, error) {
 	var d json.RawMessage
 	err := DoRequest("GET", r.Ref("/.settings/rules"), nil, &d)
 	if err != nil {
 		return nil, err
 	}
 	return []byte(d), nil
-}
-
-// SetRules sets the security rules for Firebase reference r.
-func SetRules(r *Ref, v interface{}) error {
-	return DoRequest("PUT", r.Ref("/.settings/rules"), v, nil)
 }

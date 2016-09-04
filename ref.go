@@ -171,12 +171,13 @@ func (r *Ref) Ref(path string, opts ...Option) *Ref {
 	r.rw.RLock()
 	defer r.rw.RUnlock()
 
-	if !strings.HasPrefix(path, "/") {
-		path = "/" + path
+	curpath := r.url.Path
+	if !strings.HasSuffix(curpath, "/") {
+		curpath += "/"
 	}
 
-	if strings.HasSuffix(r.url.Path, "/") {
-		path = r.url.Path[:len(r.url.Path)-1] + path
+	if strings.HasPrefix(path, "/") {
+		path = path[1:]
 	}
 
 	c := &Ref{
@@ -185,7 +186,7 @@ func (r *Ref) Ref(path string, opts ...Option) *Ref {
 			Opaque: r.url.Opaque,
 			User:   r.url.User,
 			Host:   r.url.Host,
-			Path:   path,
+			Path:   curpath + path,
 		},
 		transport:   r.transport,
 		source:      r.source,
@@ -235,14 +236,19 @@ func (r *Ref) Remove() error {
 	return Remove(r)
 }
 
-// GetRules retrieves the security rules for Firebase reference r.
-func (r *Ref) GetRules() ([]byte, error) {
-	return GetRules(r)
-}
-
 // SetRules sets the security rules for Firebase reference r.
 func (r *Ref) SetRules(v interface{}) error {
 	return SetRules(r, v)
+}
+
+// SetRulesJSON sets the JSON-encoded security rules for Firebase reference r.
+func (r *Ref) SetRulesJSON(buf []byte) error {
+	return SetRulesJSON(r, buf)
+}
+
+// GetRulesJSON retrieves the security rules for Firebase reference r.
+func (r *Ref) GetRulesJSON() ([]byte, error) {
+	return GetRulesJSON(r)
 }
 
 // Watch watches the Firebase ref for events, emitting all encountered events
