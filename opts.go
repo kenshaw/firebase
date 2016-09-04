@@ -2,6 +2,7 @@ package firebase
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -31,9 +32,7 @@ func URL(urlstr string) Option {
 	return func(r *Ref) error {
 		u, err := url.Parse(urlstr)
 		if err != nil {
-			return &Error{
-				Err: fmt.Sprintf("could not parse url: %v", err),
-			}
+			return fmt.Errorf("could not parse url: %v", err)
 		}
 
 		r.url = u
@@ -74,16 +73,12 @@ func GoogleServiceAccountCredentialsJSON(buf []byte) Option {
 		// decode settings into v
 		err = json.Unmarshal(buf, &v)
 		if err != nil {
-			return &Error{
-				Err: fmt.Sprintf("could not unmarshal service account credentials: %v", err),
-			}
+			return fmt.Errorf("could not unmarshal service account credentials: %v", err)
 		}
 
 		// simple check
 		if v.ProjectID == "" || v.ClientEmail == "" || v.PrivateKey == "" {
-			return &Error{
-				Err: "google service account credentials missing project_id, client_email or private_key",
-			}
+			return errors.New("google service account credentials missing project_id, client_email or private_key")
 		}
 
 		// set URL
@@ -95,9 +90,7 @@ func GoogleServiceAccountCredentialsJSON(buf []byte) Option {
 		// create token signer
 		signer, err := jwt.RS256.New(jwt.PEM{[]byte(v.PrivateKey)})
 		if err != nil {
-			return &Error{
-				Err: fmt.Sprintf("could not create jwt signer for auth token source: %v", err),
-			}
+			return fmt.Errorf("could not create jwt signer for auth token source: %v", err)
 		}
 
 		// create auth token source
@@ -107,9 +100,7 @@ func GoogleServiceAccountCredentialsJSON(buf []byte) Option {
 			oauth2util.IssuedAt(true),
 		)
 		if err != nil {
-			return &Error{
-				Err: fmt.Sprintf("could not create auth token source: %v", err),
-			}
+			return fmt.Errorf("could not create auth token source: %v", err)
 		}
 
 		// add the claims for firebase
@@ -136,9 +127,7 @@ func GoogleServiceAccountCredentialsFile(path string) Option {
 	return func(r *Ref) error {
 		buf, err := ioutil.ReadFile(path)
 		if err != nil {
-			return &Error{
-				Err: fmt.Sprintf("could not read google service account credentials file: %v", err),
-			}
+			return fmt.Errorf("could not read google service account credentials file: %v", err)
 		}
 
 		return GoogleServiceAccountCredentialsJSON(buf)(r)
@@ -233,9 +222,7 @@ func jsonQuery(field string, val interface{}) QueryOption {
 	// json encode
 	buf, err := json.Marshal(val)
 	if err != nil {
-		err = &Error{
-			Err: fmt.Sprintf("could not marshal query option: %v", err),
-		}
+		err = fmt.Errorf("could not marshal query option: %v", err)
 	}
 
 	return func(v url.Values) error {

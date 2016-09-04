@@ -50,9 +50,7 @@ func NewDatabaseRef(opts ...Option) (*Ref, error) {
 	for _, o := range opts {
 		err = o(r)
 		if err != nil {
-			return nil, &Error{
-				Err: fmt.Sprintf("could not create database ref: %v", err),
-			}
+			return nil, err
 		}
 	}
 
