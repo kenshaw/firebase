@@ -32,6 +32,8 @@ type Ref struct {
 	auth   *oauth2util.JwtBearerToken
 	source oauth2.TokenSource
 
+	queryOpts []QueryOption
+
 	watchBufLen int
 }
 
@@ -85,6 +87,10 @@ func (r *Ref) createRequest(method string, body io.Reader, opts ...QueryOption) 
 	// build url
 	u := r.URL().String() + ".json"
 
+	if len(r.queryOpts) > 0 {
+		opts = append(r.queryOpts, opts...)
+	}
+
 	// build query params
 	if len(opts) > 0 {
 		v := make(url.Values)
@@ -128,8 +134,8 @@ func (r *Ref) clientAndRequest(method string, body io.Reader, opts ...QueryOptio
 	return client, req, nil
 }
 
-// AddClaim adds a claim to the Firebase ref token source.
-func (r *Ref) AddClaim(field string, v interface{}) error {
+// AddTokenSourceClaim adds a claim to the auth token source.
+func (r *Ref) AddTokenSourceClaim(field string, v interface{}) error {
 	r.rw.Lock()
 	defer r.rw.Unlock()
 
@@ -145,7 +151,24 @@ func (r *Ref) AddClaim(field string, v interface{}) error {
 	return nil
 }
 
-// Ref duplicates the ref, but locking it to a sub Firebase ref at path.
+// SetQueryOptions sets the default query options for the Firebase ref.
+func (r *Ref) SetQueryOptions(opts ...QueryOption) {
+	r.rw.Lock()
+	defer r.rw.Unlock()
+
+	r.queryOpts = opts
+}
+
+// Ref creates a child ref, locking it to the specified path.
+//
+// If an Option is passed that returns an error, then this func will panic.
+//
+// If an Option that could return an error needs to be applied to the child ref
+// after it has been created, then apply it in the following manner:
+//
+//     child := db.Ref("/path/to/child")
+//     err := SomeOption(child)
+// 	   if err != nil { ... }
 func (r *Ref) Ref(path string, opts ...Option) *Ref {
 	r.rw.RLock()
 	defer r.rw.RUnlock()
@@ -168,6 +191,7 @@ func (r *Ref) Ref(path string, opts ...Option) *Ref {
 		},
 		transport:   r.transport,
 		source:      r.source,
+		queryOpts:   r.queryOpts,
 		watchBufLen: r.watchBufLen,
 	}
 
@@ -223,17 +247,21 @@ func (r *Ref) SetRules(v interface{}) error {
 	return SetRules(r, v)
 }
 
-// Watch watches a Firebase ref for events, emitting them on returned channel.
-// Will end when the passed context is done or when the Firebase connection is
-// closed.
+// Watch watches the Firebase ref for events, emitting all encountered events
+// on the returned channel.
+//
+// The returned channel is closed only when the passed context is done or when
+// the Firebase connection is closed.
 func (r *Ref) Watch(ctxt context.Context, opts ...QueryOption) (<-chan *Event, error) {
 	return Watch(r, ctxt, opts...)
 }
 
-// Listen listens for specified eventTypes on the Firebase ref and emits them
-// on the returned channel. Ends only when the context is done. If the Firebase
-// connection closes, or the auth token is revoked, then a new connection to
-// Firebase will be made.
+// Listen listens on the Firebase ref for any of the the specified eventTypes,
+// emitting them on the returned channel.
+//
+// The returned channel is closed only when the context is done. If the
+// Firebase connection closes, or the auth token is revoked, then Listen will
+// continue to reattempt connecting to the Firebase ref.
 func (r *Ref) Listen(ctxt context.Context, eventTypes []EventType, opts ...QueryOption) <-chan *Event {
 	return Listen(r, ctxt, eventTypes, opts...)
 }

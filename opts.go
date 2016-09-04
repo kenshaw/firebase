@@ -145,17 +145,29 @@ func GoogleServiceAccountCredentialsFile(path string) Option {
 	}
 }
 
-// UserID is an option that sets the auth "uid".
-func UserID(uid string) Option {
+// DefaultQueryOptions is an option that sets the default query options on the
+// ref.
+func DefaultQueryOptions(opts ...QueryOption) Option {
 	return func(r *Ref) error {
-		return r.AddClaim("uid", uid)
+		r.SetQueryOptions(opts...)
+		return nil
 	}
 }
 
-// WithClaims is an option that adds additional claims to the token source.
+// UserID is an option that sets the auth user id ("uid") via the
+// auth_variable_override on the ref.
+func UserID(uid string) Option {
+	return func(r *Ref) error {
+		return DefaultQueryOptions(AuthOverride(map[string]interface{}{
+			"uid": uid,
+		}))(r)
+	}
+}
+
+// WithClaims is an option that adds additional claims to the auth token source.
 func WithClaims(claims map[string]interface{}) Option {
 	return func(r *Ref) error {
-		return r.AddClaim("claims", claims)
+		return r.AddTokenSourceClaim("claims", claims)
 	}
 }
 
@@ -271,5 +283,12 @@ func LimitToLast(n uint) QueryOption {
 	return func(v url.Values) error {
 		v.Add("limitToLast", strconv.FormatUint(uint64(n), 10))
 		return nil
+	}
+}
+
+// AuthOverride is a query option that sets the auth_variable_override.
+func AuthOverride(val interface{}) QueryOption {
+	return func(v url.Values) error {
+		return jsonQuery("auth_variable_override", val)(v)
 	}
 }
