@@ -70,7 +70,8 @@ func Set(r *Ref, v interface{}) error {
 	return DoRequest("PUT", r, v, nil)
 }
 
-// Push pushes values v to Firebase reference r, returning the ID.
+// Push pushes values v to Firebase reference r, returning the name (ID) of the
+// created ref.
 func Push(r *Ref, v interface{}) (string, error) {
 	var res struct {
 		Name string `json:"name"`
@@ -78,9 +79,7 @@ func Push(r *Ref, v interface{}) (string, error) {
 
 	err := DoRequest("POST", r, v, &res)
 	if err != nil {
-		return "", &Error{
-			Err: fmt.Sprintf("could not push: %v", err),
-		}
+		return "", err
 	}
 
 	return res.Name, nil
@@ -101,9 +100,7 @@ func GetRules(r *Ref) ([]byte, error) {
 	var d json.RawMessage
 	err := DoRequest("GET", r.Ref("/.settings/rules"), nil, &d)
 	if err != nil {
-		return nil, &Error{
-			Err: fmt.Sprintf("could not retrieve rules: %v", err),
-		}
+		return nil, err
 	}
 	return []byte(d), nil
 }
