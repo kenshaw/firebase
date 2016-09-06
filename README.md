@@ -2,13 +2,23 @@
 
 Package firebase provides a Firebase v3.0.0+ compatible API.
 
+## Installation
+
+Install in the usual way:
+
+```sh
+go get -u github.com/knq/firebase
+```
+
 ## Usage
 
 Please see [the GoDoc API page](http://godoc.org/github.com/knq/firebase) for a
 full API listing.
 
+Below is a short example showing basic usage. Additionally, a [more complete
+example](example/example.go) is available.
+
 ```go
-// example/example.go
 package main
 
 import (
