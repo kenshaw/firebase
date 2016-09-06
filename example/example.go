@@ -196,7 +196,7 @@ const securityRules = `{
     ".write": "false",
     "people": {
       "$uid": {
-		".read": "auth !== null && auth.uid !== null",
+        ".read": "auth !== null && auth.uid !== null",
         ".write": "auth !== null && auth.uid !== null && ($uid === auth.uid || auth.admin === true)"
       }
     }
