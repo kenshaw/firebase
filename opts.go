@@ -41,7 +41,8 @@ func URL(urlstr string) Option {
 	}
 }
 
-// Transport is an option to set the HTTP transport.
+// Transport is an option to set the underlying HTTP transport used when making
+// requests against a Firebase ref.
 func Transport(roundTripper http.RoundTripper) Option {
 	return func(r *Ref) error {
 		r.transport = roundTripper
@@ -49,7 +50,8 @@ func Transport(roundTripper http.RoundTripper) Option {
 	}
 }
 
-// WatchBufferLen is an option that sets the watch buffer size.
+// WatchBufferLen is an option that sets the channel buffer size for the
+// returned event channels from Watch and Listen.
 func WatchBufferLen(len int) Option {
 	return func(r *Ref) error {
 		r.watchBufLen = len
@@ -57,8 +59,11 @@ func WatchBufferLen(len int) Option {
 	}
 }
 
-// GoogleServiceAccountCredentialsJSON loads Firebase credentials from the JSON
-// encoded buf.
+// GoogleServiceAccountCredentialsJSON is an option that loads Google Service
+// Account credentials for use with the Firebase ref from a JSON encoded buf.
+//
+// Google Service Account credentials can be downloaded from the Google Cloud
+// console: https://console.cloud.google.com/iam-admin/serviceaccounts/
 func GoogleServiceAccountCredentialsJSON(buf []byte) Option {
 	return func(r *Ref) error {
 		var err error
@@ -119,10 +124,11 @@ func GoogleServiceAccountCredentialsJSON(buf []byte) Option {
 	}
 }
 
-// GoogleServiceAccountCredentialsFile loads Firebase credentials from the
-// specified path on disk and configures Firebase accordingly.
+// GoogleServiceAccountCredentialsFile is an option that loads Google Service
+// Account credentials for use with the Firebase ref from the specified file.
 //
-// Account credentials can be downloaded from the Google Cloud console.
+// Google Service Account credentials can be downloaded from the Google Cloud
+// console: https://console.cloud.google.com/iam-admin/serviceaccounts/
 func GoogleServiceAccountCredentialsFile(path string) Option {
 	return func(r *Ref) error {
 		buf, err := ioutil.ReadFile(path)
@@ -155,7 +161,8 @@ func UserID(uid string) Option {
 	}
 }
 
-// WithClaims is an option that adds additional claims to the auth token source.
+// WithClaims is an option that adds additional claims to the auth token
+// source.
 func WithClaims(claims map[string]interface{}) Option {
 	return func(r *Ref) error {
 		return r.AddTokenSourceClaim("claims", claims)
@@ -204,13 +211,13 @@ func Log(requestLogf, responseLogf Logf) Option {
 // Firebase.
 type QueryOption func(url.Values) error
 
-// Shallow is a query option that toggles Firebase to return a shallow result.
+// Shallow is a query option that toggles a query to return shallow result (ie, the keys only).
 func Shallow(v url.Values) error {
 	v.Add("shallow", "true")
 	return nil
 }
 
-// PrintPretty is a query option that toggles pretty formatting for Firebase
+// PrintPretty is a query option that toggles pretty formatting for query
 // results.
 func PrintPretty(v url.Values) error {
 	v.Add("print", "pretty")

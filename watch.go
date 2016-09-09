@@ -13,14 +13,15 @@ import (
 type EventType string
 
 const (
-	// firebase SSE events
+	// -----------------------------------------------
+	// firebase server-sent events
 
-	// EventTypePut is the event type sent when new data is inserted to the
-	// Firebase ref.
+	// EventTypePut is the event type sent when new data is inserted to a
+	// watched Firebase ref.
 	EventTypePut EventType = "put"
 
-	// EventTypePatch is the event type sent when data at the Firebase ref is
-	// updated.
+	// EventTypePatch is the event type sent when data is updated at a watched
+	// Firebase ref.
 	EventTypePatch EventType = "patch"
 
 	// EventTypeKeepAlive is the event type sent when a keep alive is
@@ -29,13 +30,14 @@ const (
 
 	// EventTypeCancel is the event type sent when the Firebase security rules
 	// on the watched ref are altered to no longer allow the auth token to read
-	// it.
+	// data at the watched ref.
 	EventTypeCancel EventType = "cancel"
 
 	// EventTypeAuthRevoked is the event type sent when the auth token is
 	// revoked or expired.
 	EventTypeAuthRevoked EventType = "auth_revoked"
 
+	// -----------------------------------------------
 	// synthesized events
 
 	// EventTypeClosed is the event type sent when the connection with the
@@ -60,7 +62,7 @@ func (e EventType) String() string {
 	return string(e)
 }
 
-// Event is a Firebase event emitted from Watch.
+// Event is a Firebase server side event emitted from Watch and Listen.
 type Event struct {
 	Type EventType
 	Data []byte
@@ -76,8 +78,11 @@ const (
 	watchDataPrefix  = "data: "
 )
 
-// readLine reads a line from a reader, synthesizing the provided event type if
-// there was an error or the line is missing the supplied prefix.
+// readLine reads a line from a io.Reader, synthesizing errEventType if an
+// error was encountered, or the line is missing the supplied prefix.
+//
+// if the prefix is the empty string, then readLine tests for a blank or empty
+// line.
 func readLine(rdr *bufio.Reader, prefix string, errEventType EventType) ([]byte, *Event) {
 	// read event: line
 	line, err := rdr.ReadBytes('\n')
@@ -117,9 +122,10 @@ func readLine(rdr *bufio.Reader, prefix string, errEventType EventType) ([]byte,
 	return bytes.TrimSpace(line[len([]byte(prefix)):]), nil
 }
 
-// Watch watches a Firebase ref for events, emitting them on returned channel.
-// Will end when the passed context is canceled or when the remote connection
-// is closed.
+// Watch watches a Firebase ref for events, emitting encountered events on the
+// returned channel. Watch ends when the passed context is done, when the
+// remote connection is closed, or when an error is encountered while reading
+// events from the server.
 func Watch(r *Ref, ctxt context.Context, opts ...QueryOption) (<-chan *Event, error) {
 	var err error
 
@@ -200,14 +206,12 @@ func Watch(r *Ref, ctxt context.Context, opts ...QueryOption) (<-chan *Event, er
 	return events, nil
 }
 
-// Listen listens for specified eventTypes on the Firebase ref and emits them
-// on the returned channel. Ends only when the context is done. If the Firebase
-// connection closes, or the auth token is revoked, then a new connection to
-// Firebase will be made.
-//
-// Additionally, it should be noted that the events channel will be closed if
-// there is an underlying connectivity issue such as an inability to
-// authenticate a OAuth2 token.
+// Listen listens for the specified eventTypes on the Firebase ref and emits
+// them on the returned channel. Ends only when the context is done. If the
+// Firebase connection closes, or the auth token is revoked, then a new
+// connection to Firebase will be made. However, it should be noted that the
+// events channel will be closed if there is an underlying connectivity issue
+// such as an inability to authenticate a OAuth2 token.
 func Listen(r *Ref, ctxt context.Context, eventTypes []EventType, opts ...QueryOption) <-chan *Event {
 	events := make(chan *Event, r.watchBufLen)
 

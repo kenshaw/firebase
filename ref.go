@@ -211,42 +211,43 @@ func (r *Ref) URL() *url.URL {
 	return r.url
 }
 
-// Get retrieves the values at the Firebase ref, decoding to d.
+// Get retrieves the values stored at the Firebase ref and decodes them into d.
 func (r *Ref) Get(d interface{}, opts ...QueryOption) error {
 	return Get(r, d, opts...)
 }
 
-// Set stores values v at Firebase reference r.
+// Set stores values v at the Firebase ref.
 func (r *Ref) Set(v interface{}) error {
 	return Set(r, v)
 }
 
-// Push pushes values v to Firebase reference r, returning the ID.
+// Push pushes values v to the Firebase ref, returning the name (ID) of the
+// pushed node.
 func (r *Ref) Push(v interface{}) (string, error) {
 	return Push(r, v)
 }
 
-// Update updates the stored values at Firebase reference r to v.
+// Update updates the values stored at the Firebase ref to v.
 func (r *Ref) Update(v interface{}) error {
 	return Update(r, v)
 }
 
-// Remove removes the values stored at Firebase reference r.
+// Remove removes the values stored at the Firebase ref.
 func (r *Ref) Remove() error {
 	return Remove(r)
 }
 
-// SetRules sets the security rules for Firebase reference r.
+// SetRules sets the security rules for the Firebase ref.
 func (r *Ref) SetRules(v interface{}) error {
 	return SetRules(r, v)
 }
 
-// SetRulesJSON sets the JSON-encoded security rules for Firebase reference r.
+// SetRulesJSON sets the JSON-encoded security rules for the Firebase ref.
 func (r *Ref) SetRulesJSON(buf []byte) error {
 	return SetRulesJSON(r, buf)
 }
 
-// GetRulesJSON retrieves the security rules for Firebase reference r.
+// GetRulesJSON retrieves the security rules for the Firebase ref.
 func (r *Ref) GetRulesJSON() ([]byte, error) {
 	return GetRulesJSON(r)
 }

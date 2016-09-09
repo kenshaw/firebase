@@ -60,18 +60,18 @@ func DoRequest(method string, r *Ref, v, d interface{}, opts ...QueryOption) err
 	return nil
 }
 
-// Get retrieves the values stored at Firebase reference r and decodes them into d.
+// Get retrieves the values stored at Firebase ref r and decodes them into d.
 func Get(r *Ref, d interface{}, opts ...QueryOption) error {
 	return DoRequest("GET", r, nil, d, opts...)
 }
 
-// Set stores values v at Firebase reference r.
+// Set stores values v at Firebase ref r.
 func Set(r *Ref, v interface{}) error {
 	return DoRequest("PUT", r, v, nil)
 }
 
-// Push pushes values v to Firebase reference r, returning the name (ID) of the
-// created ref.
+// Push pushes values v to Firebase ref r, returning the name (ID) of the
+// pushed node.
 func Push(r *Ref, v interface{}) (string, error) {
 	var res struct {
 		Name string `json:"name"`
@@ -85,22 +85,22 @@ func Push(r *Ref, v interface{}) (string, error) {
 	return res.Name, nil
 }
 
-// Update updates the stored values at Firebase reference r to v.
+// Update updates the values stored at Firebase ref r to v.
 func Update(r *Ref, v interface{}) error {
 	return DoRequest("PATCH", r, v, nil)
 }
 
-// Remove removes the values stored at Firebase reference r.
+// Remove removes the values stored at Firebase ref r.
 func Remove(r *Ref) error {
 	return DoRequest("DELETE", r, nil, nil)
 }
 
-// SetRules sets the security rules for Firebase reference r.
+// SetRules sets the security rules for Firebase ref r.
 func SetRules(r *Ref, v interface{}) error {
 	return DoRequest("PUT", r.Ref("/.settings/rules"), v, nil)
 }
 
-// SetRulesJSON sets the JSON-encoded security rules for Firebase reference r.
+// SetRulesJSON sets the JSON-encoded security rules for Firebase ref r.
 func SetRulesJSON(r *Ref, buf []byte) error {
 	var v interface{}
 
@@ -117,7 +117,7 @@ func SetRulesJSON(r *Ref, buf []byte) error {
 	return DoRequest("PUT", r.Ref("/.settings/rules"), v, nil)
 }
 
-// GetRulesJSON retrieves the security rules for Firebase reference r.
+// GetRulesJSON retrieves the security rules for Firebase ref r.
 func GetRulesJSON(r *Ref) ([]byte, error) {
 	var d json.RawMessage
 	err := DoRequest("GET", r.Ref("/.settings/rules"), nil, &d)
