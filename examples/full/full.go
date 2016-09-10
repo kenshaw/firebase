@@ -1,4 +1,4 @@
-// example/example.go
+// example/full/full.go
 package main
 
 import (
