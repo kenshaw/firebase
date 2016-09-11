@@ -22,3 +22,8 @@ Scopes can be passed via the `gcloud` cli tool using the `--scopes` option:
 # this uses the short-hand notation available for the userinfo.email scope
 $ gcloud compute instances create <INSTANCE_NAME> --scopes userinfo-email,https://www.googleapis.com/auth/firebase.database
 ```
+
+You can see what scopes are assigned to an instance using this command:
+```sh
+$ gcloud compute instances describe <INSTANCE_NAME>
+```

@@ -50,6 +50,24 @@ func URL(urlstr string) Option {
 	}
 }
 
+// ProjectID is an option that sets the Firebase base URL as
+// https://<projectID>.firebaseio.com/.
+func ProjectID(projectID string) Option {
+	return func(r *Ref) error {
+		if projectID == "" {
+			return errors.New("project id cannot be empty")
+		}
+
+		// set url
+		err := URL("https://" + projectID + ".firebaseio.com/")(r)
+		if err != nil {
+			return errors.New("invalid project id")
+		}
+
+		return nil
+	}
+}
+
 // Transport is an option to set the underlying HTTP transport used when making
 // requests against a Firebase ref.
 func Transport(roundTripper http.RoundTripper) Option {
@@ -95,8 +113,8 @@ func GoogleServiceAccountCredentialsJSON(buf []byte) Option {
 			return errors.New("google service account credentials missing project_id, client_email or private_key")
 		}
 
-		// set URL
-		err = URL("https://" + v.ProjectID + ".firebaseio.com/")(r)
+		// set ref url
+		err = ProjectID(v.ProjectID)(r)
 		if err != nil {
 			return err
 		}
@@ -182,7 +200,7 @@ func GoogleComputeCredentials(serviceAccount string) Option {
 		}
 
 		// set ref url
-		err = URL("https://" + projectID + ".firebaseio.com/")(r)
+		err = ProjectID(projectID)(r)
 		if err != nil {
 			return err
 		}
