@@ -2,6 +2,7 @@
 package firebase
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -52,6 +53,11 @@ func NewDatabaseRef(opts ...Option) (*Ref, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	// check url was set
+	if r.url == nil {
+		return nil, errors.New("no firebase url specified")
 	}
 
 	return r, nil
