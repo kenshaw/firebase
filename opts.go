@@ -12,8 +12,10 @@ import (
 	"strings"
 	"time"
 
+	"cloud.google.com/go/compute/metadata"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 
 	"github.com/knq/jwt"
 	"github.com/knq/oauth2util"
@@ -22,6 +24,13 @@ import (
 const (
 	// DefaultTokenExpiration is the default expiration for generated OAuth2 tokens.
 	DefaultTokenExpiration = 1 * time.Hour
+)
+
+var (
+	requiredScopes = []string{
+		"https://www.googleapis.com/auth/userinfo.email",
+		"https://www.googleapis.com/auth/firebase.database",
+	}
 )
 
 // Option is an option to modify a Firebase ref.
@@ -112,10 +121,7 @@ func GoogleServiceAccountCredentialsJSON(buf []byte) Option {
 		r.auth.AddClaim("iss", v.ClientEmail)
 		r.auth.AddClaim("sub", v.ClientEmail)
 		r.auth.AddClaim("aud", v.TokenURI)
-		r.auth.AddClaim("scope", strings.Join([]string{
-			"https://www.googleapis.com/auth/userinfo.email",
-			"https://www.googleapis.com/auth/firebase.database",
-		}, " "))
+		r.auth.AddClaim("scope", strings.Join(requiredScopes, " "))
 
 		// set source
 		r.source = oauth2.ReuseTokenSource(nil, r.auth)
@@ -137,6 +143,52 @@ func GoogleServiceAccountCredentialsFile(path string) Option {
 		}
 
 		return GoogleServiceAccountCredentialsJSON(buf)(r)
+	}
+}
+
+// GoogleComputeCredentials is an option that loads the Google Service Account
+// credentials from the GCE metadata associated with the GCE compute instance.
+// If serviceAccount is empty, then the default service account credentials
+// associated with the GCE instance will be used.
+func GoogleComputeCredentials(serviceAccount string) Option {
+	return func(r *Ref) error {
+		var err error
+
+		// get compute metadata scopes associated with the service account
+		scopes, err := metadata.Scopes(serviceAccount)
+		if err != nil {
+			return err
+		}
+
+		// check if all the necessary scopes are provided
+		for _, s := range requiredScopes {
+			if !sliceContains(scopes, s) {
+				// NOTE: if you are seeing this error, you probably need to
+				// recreate your compute instance with the correct scope
+				return fmt.Errorf("missing required scope %s in compute metadata", s)
+			}
+		}
+
+		// get compute metadata project id
+		projectID, err := metadata.ProjectID()
+		if err != nil {
+			return err
+		}
+		if projectID == "" {
+			return errors.New("could not retrieve project id from compute metadata service")
+		}
+
+		// set ref url
+		err = URL("https://" + projectID + ".firebaseio.com/")(r)
+		if err != nil {
+			return err
+		}
+
+		// set transport as the oauth2.Transport
+		return Transport(&oauth2.Transport{
+			Source: google.ComputeTokenSource(serviceAccount),
+			Base:   r.transport,
+		})(r)
 	}
 }
 
@@ -286,4 +338,15 @@ func LimitToFirst(n uint) QueryOption {
 // the last n items.
 func LimitToLast(n uint) QueryOption {
 	return uintQuery("limitToLast", n)
+}
+
+// sliceContains returns true if haystack contains needle.
+func sliceContains(haystack []string, needle string) bool {
+	for _, s := range haystack {
+		if s == needle {
+			return true
+		}
+	}
+
+	return false
 }
