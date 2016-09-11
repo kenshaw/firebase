@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"log"
 
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
-
 	"github.com/knq/firebase"
 )
 
@@ -23,10 +20,7 @@ func main() {
 	//
 	// gcloud compute instances create my-test-project-1 --scopes userinfo-email,https://www.googleapis.com/auth/firebase.database
 	db, err := firebase.NewDatabaseRef(
-		firebase.URL("https://<PROJECT ID>.firebaseio.com/"),
-		firebase.Transport(&oauth2.Transport{
-			Source: google.ComputeTokenSource(""),
-		}),
+		firebase.GoogleComputeCredentials(""),
 	)
 	if err != nil {
 		log.Fatal(err)
