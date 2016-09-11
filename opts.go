@@ -26,12 +26,12 @@ const (
 	DefaultTokenExpiration = 1 * time.Hour
 )
 
-var (
-	requiredScopes = []string{
-		"https://www.googleapis.com/auth/userinfo.email",
-		"https://www.googleapis.com/auth/firebase.database",
-	}
-)
+// requiredScopes are the oauth2 scopes required for Google's service accounts
+// when using with firebase.
+var requiredScopes = []string{
+	"https://www.googleapis.com/auth/userinfo.email",
+	"https://www.googleapis.com/auth/firebase.database",
+}
 
 // Option is an option to modify a Firebase ref.
 type Option func(r *Ref) error
@@ -165,6 +165,9 @@ func GoogleComputeCredentials(serviceAccount string) Option {
 			if !sliceContains(scopes, s) {
 				// NOTE: if you are seeing this error, you probably need to
 				// recreate your compute instance with the correct scope
+				//
+				// as of August 2016, there is not a way to add a scope to an
+				// existing compute instance
 				return fmt.Errorf("missing required scope %s in compute metadata", s)
 			}
 		}
