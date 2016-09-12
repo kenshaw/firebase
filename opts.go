@@ -270,6 +270,8 @@ type Logf func(string, ...interface{})
 
 // Log is an option that writes all HTTP request and response data to the
 // respective logger.
+//
+// NOTE: this Option will not work with Watch/Listen.
 func Log(requestLogf, responseLogf Logf) Option {
 	return func(r *Ref) error {
 		return Transport(&httpLogger{

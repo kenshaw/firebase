@@ -258,11 +258,12 @@ func (r *Ref) GetRulesJSON() ([]byte, error) {
 	return GetRulesJSON(r)
 }
 
-// Watch watches the Firebase ref for events, emitting all encountered events
-// on the returned channel.
+// Watch watches the Firebase ref for events, emitting encountered events on
+// the returned channel. Watch ends when the passed context is done, when the
+// remote connection is closed, or when an error is encountered while reading
+// events from the server.
 //
-// The returned channel is closed only when the passed context is done or when
-// the Firebase connection is closed.
+// NOTE: the Log option will not work with Watch/Listen.
 func (r *Ref) Watch(ctxt context.Context, opts ...QueryOption) (<-chan *Event, error) {
 	return Watch(r, ctxt, opts...)
 }
@@ -273,6 +274,9 @@ func (r *Ref) Watch(ctxt context.Context, opts ...QueryOption) (<-chan *Event, e
 // The returned channel is closed only when the context is done. If the
 // Firebase connection closes, or the auth token is revoked, then Listen will
 // continue to reattempt connecting to the Firebase ref.
+//
+// NOTE: the Log option will not work with Watch/Listen.
+// events from the server.
 func (r *Ref) Listen(ctxt context.Context, eventTypes []EventType, opts ...QueryOption) <-chan *Event {
 	return Listen(r, ctxt, eventTypes, opts...)
 }

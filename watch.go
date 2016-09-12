@@ -125,6 +125,8 @@ func readLine(rdr *bufio.Reader, prefix string, errEventType EventType) ([]byte,
 // Watch watches a Firebase ref for events, emitting encountered events on the
 // returned channel. Watch ends when the passed context is done, when the
 // remote connection is closed, or when an error is encountered while reading
+//
+// NOTE: the Log option will not work with Watch/Listen.
 // events from the server.
 func Watch(r *Ref, ctxt context.Context, opts ...QueryOption) (<-chan *Event, error) {
 	var err error
@@ -206,12 +208,15 @@ func Watch(r *Ref, ctxt context.Context, opts ...QueryOption) (<-chan *Event, er
 	return events, nil
 }
 
-// Listen listens for the specified eventTypes on the Firebase ref and emits
-// them on the returned channel. Ends only when the context is done. If the
-// Firebase connection closes, or the auth token is revoked, then a new
-// connection to Firebase will be made. However, it should be noted that the
-// events channel will be closed if there is an underlying connectivity issue
-// such as an inability to authenticate a OAuth2 token.
+// Listen listens on a Firebase ref for any of the the specified eventTypes,
+// emitting them on the returned channel.
+//
+// The returned channel is closed only when the context is done. If the
+// Firebase connection closes, or the auth token is revoked, then Listen will
+// continue to reattempt connecting to the Firebase ref.
+//
+// NOTE: the Log option will not work with Watch/Listen.
+// events from the server.
 func Listen(r *Ref, ctxt context.Context, eventTypes []EventType, opts ...QueryOption) <-chan *Event {
 	events := make(chan *Event, r.watchBufLen)
 
