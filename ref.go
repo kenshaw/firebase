@@ -12,8 +12,6 @@ import (
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
-
-	"github.com/knq/oauth2util"
 )
 
 const (
@@ -30,7 +28,6 @@ type Ref struct {
 	transport http.RoundTripper
 
 	// oauth2 token
-	auth   *oauth2util.JwtBearerToken
 	source oauth2.TokenSource
 
 	queryOpts []QueryOption
@@ -136,23 +133,6 @@ func (r *Ref) clientAndRequest(method string, body io.Reader, opts ...QueryOptio
 	}
 
 	return client, req, nil
-}
-
-// AddTokenSourceClaim adds a claim to the auth token source.
-func (r *Ref) AddTokenSourceClaim(field string, v interface{}) error {
-	r.rw.Lock()
-	defer r.rw.Unlock()
-
-	if r.auth == nil {
-		return &Error{
-			Err: "ref does not have an initialized auth token source",
-		}
-	}
-
-	r.auth.AddClaim(field, v)
-	r.source = oauth2.ReuseTokenSource(nil, r.auth)
-
-	return nil
 }
 
 // SetQueryOptions sets the default query options for the Firebase ref.

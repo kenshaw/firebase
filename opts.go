@@ -9,16 +9,13 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strconv"
-	"strings"
 	"time"
 
 	"cloud.google.com/go/compute/metadata"
-	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 
-	"github.com/knq/jwt"
-	"github.com/knq/oauth2util"
+	"github.com/knq/jwt/gserviceaccount"
 )
 
 const (
@@ -95,54 +92,31 @@ func GoogleServiceAccountCredentialsJSON(buf []byte) Option {
 	return func(r *Ref) error {
 		var err error
 
-		var v struct {
-			ProjectID   string `json:"project_id"`
-			ClientEmail string `json:"client_email"`
-			PrivateKey  string `json:"private_key"`
-			TokenURI    string `json:"token_uri"`
-		}
-
-		// decode settings into v
-		err = json.Unmarshal(buf, &v)
-		if err != nil {
-			return fmt.Errorf("could not unmarshal service account credentials: %v", err)
-		}
-
-		// simple check
-		if v.ProjectID == "" || v.ClientEmail == "" || v.PrivateKey == "" {
-			return errors.New("google service account credentials missing project_id, client_email or private_key")
-		}
-
-		// set ref url
-		err = ProjectID(v.ProjectID)(r)
+		// load service account credentials
+		gsa, err := gserviceaccount.FromJSON(buf)
 		if err != nil {
 			return err
 		}
 
-		// create token signer
-		signer, err := jwt.RS256.New(jwt.PEM{[]byte(v.PrivateKey)})
-		if err != nil {
-			return fmt.Errorf("could not create jwt signer for auth token source: %v", err)
+		// simple check
+		if gsa.ProjectID == "" || gsa.ClientEmail == "" || gsa.PrivateKey == "" {
+			return errors.New("google service account credentials missing project_id, client_email or private_key")
 		}
 
-		// create auth token source
-		r.auth, err = oauth2util.JWTBearerGrantTokenSource(
-			signer, v.TokenURI, context.Background(),
-			oauth2util.ExpiresIn(DefaultTokenExpiration),
-			oauth2util.IssuedAt(true),
-		)
+		// set ref url
+		err = ProjectID(gsa.ProjectID)(r)
 		if err != nil {
-			return fmt.Errorf("could not create auth token source: %v", err)
+			return err
 		}
 
-		// add the claims for firebase
-		r.auth.AddClaim("iss", v.ClientEmail)
-		r.auth.AddClaim("sub", v.ClientEmail)
-		r.auth.AddClaim("aud", v.TokenURI)
-		r.auth.AddClaim("scope", strings.Join(requiredScopes, " "))
+		// create token source
+		ts, err := gsa.TokenSource(gsa.ClientEmail, nil, requiredScopes...)
+		if err != nil {
+			return err
+		}
 
-		// set source
-		r.source = oauth2.ReuseTokenSource(nil, r.auth)
+		// wrap with a reusable token source
+		r.source = oauth2.ReuseTokenSource(nil, ts)
 
 		return nil
 	}
@@ -231,14 +205,6 @@ func UserID(uid string) Option {
 				"uid": uid,
 			}),
 		)(r)
-	}
-}
-
-// WithClaims is an option that adds additional claims to the auth token
-// source.
-func WithClaims(claims map[string]interface{}) Option {
-	return func(r *Ref) error {
-		return r.AddTokenSourceClaim("claims", claims)
 	}
 }
 
