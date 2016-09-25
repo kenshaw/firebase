@@ -15,6 +15,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 
+	"github.com/knq/jwt/bearer"
 	"github.com/knq/jwt/gserviceaccount"
 )
 
@@ -110,7 +111,13 @@ func GoogleServiceAccountCredentialsJSON(buf []byte) Option {
 		}
 
 		// create token source
-		ts, err := gsa.TokenSource(gsa.ClientEmail, nil, requiredScopes...)
+		ts, err := gsa.TokenSource(nil, requiredScopes...)
+		if err != nil {
+			return err
+		}
+
+		// add subject
+		err = bearer.Claim("sub", gsa.ClientEmail)(ts)
 		if err != nil {
 			return err
 		}
