@@ -1,1 +1,3 @@
 *.json
+/cmd/firebase-rules/firebase-rules
+firebase-rules
