@@ -13,6 +13,7 @@ import (
 var (
 	flagCredentials = flag.String("creds", "", "path to google service account credentials")
 	flagRulesFile   = flag.String("rules", "rules.json", "path to rules file")
+	flagClearRules  = flag.Bool("clear", false, "clear rules")
 )
 
 func main() {
@@ -27,14 +28,17 @@ func main() {
 	}
 
 	// load rules
-	buf, err := ioutil.ReadFile(*flagRulesFile)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
+	buf := []byte(emptyRules)
+	if !*flagClearRules {
+		buf, err = ioutil.ReadFile(*flagRulesFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
 	}
 
 	// decode
-	var v = make(map[string]interface{})
+	var v map[string]interface{}
 	err = json.Unmarshal(buf, &v)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -57,3 +61,11 @@ func main() {
 		os.Exit(1)
 	}
 }
+
+// emptyRules are the empty rule set for firebase (allow no reads/writes).
+const emptyRules = `{
+  "rules": {
+    ".read": "false",
+    ".write": "false"
+  }
+}`

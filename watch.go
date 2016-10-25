@@ -125,6 +125,7 @@ func readLine(rdr *bufio.Reader, prefix string, errEventType EventType) ([]byte,
 // Watch watches a Firebase ref for events, emitting encountered events on the
 // returned channel. Watch ends when the passed context is done, when the
 // remote connection is closed, or when an error is encountered while reading
+// data.
 //
 // NOTE: the Log option will not work with Watch/Listen.
 // events from the server.
