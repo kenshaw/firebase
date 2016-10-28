@@ -14,6 +14,7 @@ var (
 	flagCredentials = flag.String("creds", "", "path to google service account credentials")
 	flagRulesFile   = flag.String("rules", "rules.json", "path to rules file")
 	flagClearRules  = flag.Bool("clear", false, "clear rules")
+	flagClearValue  = flag.String("val", "false", "clear rule value")
 )
 
 func main() {
@@ -28,7 +29,7 @@ func main() {
 	}
 
 	// load rules
-	buf := []byte(emptyRules)
+	buf := []byte(fmt.Sprintf(emptyRules, *flagClearValue, *flagClearValue))
 	if !*flagClearRules {
 		buf, err = ioutil.ReadFile(*flagRulesFile)
 		if err != nil {
@@ -65,7 +66,7 @@ func main() {
 // emptyRules are the empty rule set for firebase (allow no reads/writes).
 const emptyRules = `{
   "rules": {
-    ".read": "false",
-    ".write": "false"
+    ".read": "%s",
+    ".write": "%s"
   }
 }`
