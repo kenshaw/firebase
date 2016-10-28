@@ -1,5 +1,5 @@
 *.json
-/cmd/firebase-rules/firebase-rules
+
 firebase-rules
-/cmd/firebase-monitor/firebase-monitor
 firebase-monitor
+firebase-merge
