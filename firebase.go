@@ -14,14 +14,23 @@ func DoRequest(method string, r *Ref, v, d interface{}, opts ...QueryOption) err
 
 	// encode v
 	var body io.Reader
-	if v != nil {
-		buf, err := json.Marshal(v)
-		if err != nil {
-			return &Error{
-				Err: fmt.Sprintf("could not marshal json: %v", err),
+	switch x := v.(type) {
+	case io.Reader:
+		body = x
+
+	case []byte:
+		body = bytes.NewReader(x)
+
+	default:
+		if v != nil {
+			buf, err := json.Marshal(v)
+			if err != nil {
+				return &Error{
+					Err: fmt.Sprintf("could not marshal json: %v", err),
+				}
 			}
+			body = bytes.NewReader(buf)
 		}
-		body = bytes.NewReader(buf)
 	}
 
 	// create client and request
@@ -102,19 +111,32 @@ func SetRules(r *Ref, v interface{}) error {
 
 // SetRulesJSON sets the JSON-encoded security rules for Firebase ref r.
 func SetRulesJSON(r *Ref, buf []byte) error {
+	var err error
 	var v interface{}
 
 	// decode
 	d := json.NewDecoder(bytes.NewReader(buf))
 	d.UseNumber()
-	err := d.Decode(&v)
+	err = d.Decode(&v)
 	if err != nil {
 		return &Error{
-			Err: fmt.Sprintf("could not unmarshal json: %v", err),
+			Err: fmt.Sprintf("could not decode json: %v", err),
 		}
 	}
 
-	return DoRequest("PUT", r.Ref("/.settings/rules"), v, nil)
+	// encode
+	var rules bytes.Buffer
+	e := json.NewEncoder(&rules)
+	e.SetEscapeHTML(false)
+	e.SetIndent("", "  ")
+	err = e.Encode(&v)
+	if err != nil {
+		return &Error{
+			Err: fmt.Sprintf("could not encode json: %v", err),
+		}
+	}
+
+	return DoRequest("PUT", r.Ref("/.settings/rules"), rules.Bytes(), nil)
 }
 
 // GetRulesJSON retrieves the security rules for Firebase ref r.

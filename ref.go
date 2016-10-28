@@ -161,10 +161,7 @@ func (r *Ref) Ref(path string, opts ...Option) *Ref {
 	if !strings.HasSuffix(curpath, "/") {
 		curpath += "/"
 	}
-
-	if strings.HasPrefix(path, "/") {
-		path = path[1:]
-	}
+	path = strings.TrimPrefix(path, "/")
 
 	c := &Ref{
 		url: &url.URL{
