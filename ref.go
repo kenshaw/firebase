@@ -108,7 +108,17 @@ func (r *Ref) createRequest(method string, body io.Reader, opts ...QueryOption) 
 	}
 
 	// create request
-	return http.NewRequest(method, u, body)
+	req, err := http.NewRequest(method, u, body)
+	if err != nil {
+		return nil, err
+	}
+
+	// substitute + on raw path
+	if strings.Contains(req.URL.Path, "+") {
+		req.URL.RawPath = strings.Replace(req.URL.Path, "+", "%2B", -1)
+	}
+
+	return req, nil
 }
 
 // clientAndRequest creates a *http.Client and *http.Request for the Firebase
