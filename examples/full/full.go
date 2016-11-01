@@ -30,7 +30,10 @@ func main() {
 	// credentials as downloaded from the Google cloud console
 	db, err := firebase.NewDatabaseRef(
 		firebase.GoogleServiceAccountCredentialsFile(*flagCredentialsFile),
-		//firebase.Log(log.Printf, log.Printf), // uncomment this to see the actual HTTP requests
+		// uncomment this to see the actual HTTP requests -- note: this prevents Listen/Watch from working!
+		//firebase.Log(log.Printf, log.Printf),
+		// if you'd like to see the above for testing, then below comment out
+		// the 3 lines starting with context.WithCancel
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -44,6 +47,7 @@ func main() {
 	}
 	log.Printf("security rules applied successfully")
 
+	// DISABLE THE NEXT 3 LINES FOR THIS TO WORK WITH firebase.Log OPTION!
 	// set up a listen context and start listener
 	ctxt, cancel := context.WithCancel(context.Background())
 	defer cancel()
