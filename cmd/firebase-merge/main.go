@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"io/ioutil"
@@ -39,9 +40,13 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// create json decoder
+	dec := json.NewDecoder(bytes.NewReader(buf))
+	dec.UseNumber()
+
 	// unmarshal json data
 	var d map[string]interface{}
-	err = json.Unmarshal(buf, &d)
+	err = dec.Decode(&d)
 	if err != nil {
 		log.Fatal(err)
 	}
