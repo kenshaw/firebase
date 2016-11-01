@@ -56,6 +56,41 @@ func (st ServerTimestamp) String() string {
 	return time.Time(st).String()
 }
 
+// Time provides a json.Marshal'able (and Unmarshal'able) type for that is
+// compatible with Firebase server timestamps.
+//
+// The JSON representation of time is a JSON number of milliseconds since the
+// Unix epoch.
+type Time time.Time
+
+// MarshalJSON satisfies the json.Marshaler interface.
+func (t Time) MarshalJSON() ([]byte, error) {
+	z := time.Time(t)
+
+	return []byte(strconv.FormatInt(z.UnixNano()/int64(time.Millisecond), 10)), nil
+}
+
+// UnmarshalJSON satisfies the json.Unmarshaler interface.
+func (t *Time) UnmarshalJSON(buf []byte) error {
+	i, err := strconv.ParseInt(string(buf), 10, 64)
+	if err != nil {
+		return err
+	}
+
+	*t = Time(time.Unix(0, i*int64(time.Millisecond)))
+	return nil
+}
+
+// Time returns the Time as time.Time.
+func (t Time) Time() time.Time {
+	return time.Time(t)
+}
+
+// String satisfies the stringer interface.
+func (t Time) String() string {
+	return time.Time(t).String()
+}
+
 // Error is a general Firebase error.
 type Error struct {
 	Err string `json:"error"`
