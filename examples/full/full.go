@@ -162,6 +162,28 @@ func main() {
 		log.Printf("admin removed %s", key)
 	}
 
+	// serialize type with time values
+	now := time.Now()
+	type myTimeType struct {
+		ServerTimestamp firebase.ServerTimestamp `json:"sts,omitempty"`
+		MyTime          firebase.Time            `json:"mtm,omitempty"`
+	}
+
+	x := myTimeType{
+		MyTime: firebase.Time(now),
+	}
+	timeID, err := db.Ref("/time-test").Push(x)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("pushed time %s (sts: %s, mtm: %s)", timeID, x.ServerTimestamp, x.MyTime)
+	var y myTimeType
+	err = db.Ref("/time-test/" + timeID).Get(&y)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("retrieved time %s (sts: %s, mtm: %s)", timeID, y.ServerTimestamp, y.MyTime)
+
 	// wait before returning to see at least one keep alive event
 	log.Printf("waiting 45 seconds to see at least one keep alive event")
 	time.Sleep(45 * time.Second)
