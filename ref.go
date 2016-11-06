@@ -210,24 +210,24 @@ func (r *Ref) Get(d interface{}, opts ...QueryOption) error {
 }
 
 // Set stores values v at the Firebase ref.
-func (r *Ref) Set(v interface{}) error {
-	return Set(r, v)
+func (r *Ref) Set(v interface{}, opts ...QueryOption) error {
+	return Set(r, v, opts...)
 }
 
 // Push pushes values v to the Firebase ref, returning the name (ID) of the
 // pushed node.
-func (r *Ref) Push(v interface{}) (string, error) {
-	return Push(r, v)
+func (r *Ref) Push(v interface{}, opts ...QueryOption) (string, error) {
+	return Push(r, v, opts...)
 }
 
 // Update updates the values stored at the Firebase ref to v.
-func (r *Ref) Update(v interface{}) error {
-	return Update(r, v)
+func (r *Ref) Update(v interface{}, opts ...QueryOption) error {
+	return Update(r, v, opts...)
 }
 
 // Remove removes the values stored at the Firebase ref.
-func (r *Ref) Remove() error {
-	return Remove(r)
+func (r *Ref) Remove(opts ...QueryOption) error {
+	return Remove(r, opts...)
 }
 
 // SetRules sets the security rules for the Firebase ref.

@@ -75,18 +75,18 @@ func Get(r *Ref, d interface{}, opts ...QueryOption) error {
 }
 
 // Set stores values v at Firebase ref r.
-func Set(r *Ref, v interface{}) error {
-	return DoRequest("PUT", r, v, nil)
+func Set(r *Ref, v interface{}, opts ...QueryOption) error {
+	return DoRequest("PUT", r, v, nil, opts...)
 }
 
 // Push pushes values v to Firebase ref r, returning the name (ID) of the
 // pushed node.
-func Push(r *Ref, v interface{}) (string, error) {
+func Push(r *Ref, v interface{}, opts ...QueryOption) (string, error) {
 	var res struct {
 		Name string `json:"name"`
 	}
 
-	err := DoRequest("POST", r, v, &res)
+	err := DoRequest("POST", r, v, &res, opts...)
 	if err != nil {
 		return "", err
 	}
@@ -95,13 +95,13 @@ func Push(r *Ref, v interface{}) (string, error) {
 }
 
 // Update updates the values stored at Firebase ref r to v.
-func Update(r *Ref, v interface{}) error {
-	return DoRequest("PATCH", r, v, nil)
+func Update(r *Ref, v interface{}, opts ...QueryOption) error {
+	return DoRequest("PATCH", r, v, nil, opts...)
 }
 
 // Remove removes the values stored at Firebase ref r.
-func Remove(r *Ref) error {
-	return DoRequest("DELETE", r, nil, nil)
+func Remove(r *Ref, opts ...QueryOption) error {
+	return DoRequest("DELETE", r, nil, nil, opts...)
 }
 
 // SetRules sets the security rules for Firebase ref r.
