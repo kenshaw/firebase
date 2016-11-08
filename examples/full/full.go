@@ -120,7 +120,7 @@ func main() {
 	log.Printf("created emily (%s)", emilyID)
 
 	// create an authenticated ref for Emily and retrieve john as emily
-	emilyDB := db.Ref("/people", firebase.UserID(emilyID))
+	emilyDB := db.Ref("/people", firebase.DefaultAuthUID(emilyID))
 	var johnE Person
 	log.Printf("retrieving john (%s) as emily (%s)", johnID, emilyID)
 	err = emilyDB.Ref(johnID).Get(&johnE)

@@ -203,15 +203,19 @@ func DefaultQueryOptions(opts ...QueryOption) Option {
 	}
 }
 
-// UserID is an option that sets the auth user id ("uid") via the
-// auth_variable_override on the ref.
-func UserID(uid string) Option {
+// DefaultAuthOverride is an  option that sets the default
+// auth_variable_override variable.
+func DefaultAuthOverride(val interface{}) Option {
 	return func(r *Ref) error {
-		return DefaultQueryOptions(
-			AuthOverride(map[string]interface{}{
-				"uid": uid,
-			}),
-		)(r)
+		return DefaultQueryOptions(AuthOverride(val))(r)
+	}
+}
+
+// DefaultAuthUID is an option that sets the default auth user id ("uid") via
+// the auth_variable_override on the ref.
+func DefaultAuthUID(uid string) Option {
+	return func(r *Ref) error {
+		return DefaultQueryOptions(AuthUID(uid))(r)
 	}
 }
 
@@ -322,6 +326,14 @@ func EndAt(val interface{}) QueryOption {
 // AuthOverride is a query option that sets the auth_variable_override.
 func AuthOverride(val interface{}) QueryOption {
 	return jsonQuery("auth_variable_override", val)
+}
+
+// AuthUID is a query option that sets the auth user id ("uid") via the
+// auth_variable_override for a single query.
+func AuthUID(uid string) QueryOption {
+	return AuthOverride(map[string]interface{}{
+		"uid": uid,
+	})
 }
 
 // LimitToFirst is a query option that limit's Firebase's returned results to
