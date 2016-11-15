@@ -7,10 +7,11 @@ import (
 )
 
 const (
-	// DefaultPushIDChars are the lexiographically correct base 64 characters for use in generated PushIDs.
-	DefaultPushIDChars = "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz"
+	// defaultPushIDChars are the lexiographically correct base 64 characters for use in generated PushIDs.
+	defaultPushIDChars = "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz"
 )
 
+// idGen holds the information related to generating a Push ID.
 type idGen struct {
 	mu sync.Mutex
 
@@ -27,8 +28,11 @@ type idGen struct {
 	last [12]int
 }
 
+// GeneratePushID generates a unique, 20-character ID for use with Firebase,
+// using the default Push ID generator.
 var GeneratePushID func() string
 
+// NewPushIDGenerator creates a new Push ID generator.
 func NewPushIDGenerator(r *rand.Rand) (*idGen, error) {
 	// make sure rand is good
 	if r == nil {
@@ -68,13 +72,13 @@ func (ig *idGen) GeneratePushID() string {
 
 	// set last 12 characters
 	for i = 0; i < 12; i++ {
-		id[19-i] = DefaultPushIDChars[ig.last[i]]
+		id[19-i] = defaultPushIDChars[ig.last[i]]
 	}
 	ig.mu.Unlock()
 
 	// set id to first 8 characters
 	for i = 7; i >= 0; i-- {
-		id[i] = DefaultPushIDChars[int(now%64)]
+		id[i] = defaultPushIDChars[int(now%64)]
 		now /= 64
 	}
 
