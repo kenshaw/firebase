@@ -1,6 +1,7 @@
 package firebase
 
 import (
+	"strings"
 	"sync"
 	"testing"
 )
@@ -19,7 +20,7 @@ func TestGeneratePushID(t *testing.T) {
 		t.Errorf("a (%s) and b (%s) should not be same", a, b)
 	}
 
-	if !(a < b) {
+	if !(strings.Compare(a, b) < 0) {
 		t.Errorf("a (%s) should be < than b (%s)", a, b)
 	}
 }
@@ -44,7 +45,7 @@ func TestGeneratePushIDMany(t *testing.T) {
 					t.Fatalf("should not have generated duplicate id %s", id)
 				}
 
-				if !(prev < id) {
+				if !(strings.Compare(prev, id) < 0) {
 					t.Fatalf("prev id %s is not < than generated id %s", prev, id)
 				}
 
