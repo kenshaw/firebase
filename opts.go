@@ -15,7 +15,6 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 
-	"github.com/knq/jwt/bearer"
 	"github.com/knq/jwt/gserviceaccount"
 )
 
@@ -29,6 +28,7 @@ const (
 var requiredScopes = []string{
 	"https://www.googleapis.com/auth/userinfo.email",
 	"https://www.googleapis.com/auth/firebase.database",
+	//"https://www.googleapis.com/auth/identitytoolkit", // will this be required in the future?
 }
 
 // Option is an option to modify a Firebase ref.
@@ -116,11 +116,15 @@ func GoogleServiceAccountCredentialsJSON(buf []byte) Option {
 			return err
 		}
 
+		// as of v4 it appears that including the subject with the token is
+		// longer necessary, and will cause a 401 unauthorized error with newly
+		// created firebase databases.
+		//
 		// add subject
-		err = bearer.Claim("sub", gsa.ClientEmail)(ts)
+		/*err = bearer.Claim("sub", gsa.ClientEmail)(ts)
 		if err != nil {
 			return err
-		}
+		}*/
 
 		// wrap with a reusable token source
 		r.source = oauth2.ReuseTokenSource(nil, ts)
