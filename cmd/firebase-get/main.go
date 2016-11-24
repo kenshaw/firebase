@@ -56,5 +56,6 @@ func main() {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("received: %s", string(buf))
+
+	fmt.Fprintf(os.Stdout, "%s\n", string(buf))
 }
