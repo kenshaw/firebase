@@ -32,12 +32,18 @@ func (st ServerTimestamp) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON satisfies the json.Unmarshaler interface.
 func (st *ServerTimestamp) UnmarshalJSON(buf []byte) error {
 	// special firebase value
-	if string(buf) == serverTimestampValue {
+	v := string(buf)
+	switch v {
+	case serverTimestampValue:
 		*st = ServerTimestamp(time.Now())
+		return nil
+
+	case "null":
+		*st = ServerTimestamp{}
 		return nil
 	}
 
-	i, err := strconv.ParseInt(string(buf), 10, 64)
+	i, err := strconv.ParseInt(v, 10, 64)
 	if err != nil {
 		return err
 	}
@@ -72,7 +78,13 @@ func (t Time) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON satisfies the json.Unmarshaler interface.
 func (t *Time) UnmarshalJSON(buf []byte) error {
-	i, err := strconv.ParseInt(string(buf), 10, 64)
+	v := string(buf)
+	if v == "null" {
+		*t = Time{}
+		return nil
+	}
+
+	i, err := strconv.ParseInt(v, 10, 64)
 	if err != nil {
 		return err
 	}
