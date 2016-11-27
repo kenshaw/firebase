@@ -16,7 +16,7 @@ Please see [the GoDoc API page](http://godoc.org/github.com/knq/firebase) for a
 full API listing.
 
 Below is a short example showing basic usage. Additionally, a [more complete
-example](examples/full/full.go) is available.
+examples](examples/) are available.
 
 ```go
 package main
