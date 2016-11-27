@@ -11,8 +11,8 @@ const (
 	defaultPushIDChars = "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz"
 )
 
-// idGen holds the information related to generating a Push ID.
-type idGen struct {
+// IDGen holds the information related to generating a Push ID.
+type IDGen struct {
 	mu sync.Mutex
 
 	// r is the random source.
@@ -33,14 +33,14 @@ type idGen struct {
 var GeneratePushID func() string
 
 // NewPushIDGenerator creates a new Push ID generator.
-func NewPushIDGenerator(r *rand.Rand) (*idGen, error) {
+func NewPushIDGenerator(r *rand.Rand) (*IDGen, error) {
 	// make sure rand is good
 	if r == nil {
 		r = rand.New(rand.NewSource(time.Now().UnixNano()))
 	}
 
 	// create generator and set last entropy
-	ig := &idGen{
+	ig := &IDGen{
 		r: r,
 	}
 	for i := 0; i < 12; i++ {
@@ -51,7 +51,7 @@ func NewPushIDGenerator(r *rand.Rand) (*idGen, error) {
 }
 
 // GeneratePushID generates a unique, 20-character ID for use with Firebase.
-func (ig *idGen) GeneratePushID() string {
+func (ig *IDGen) GeneratePushID() string {
 	var i int
 
 	id := make([]byte, 20)

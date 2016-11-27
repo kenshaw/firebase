@@ -33,7 +33,7 @@ func TestGeneratePushIDMany(t *testing.T) {
 		go func(t *testing.T, wg *sync.WaitGroup) {
 			defer wg.Done()
 
-			id, prev := "", ""
+			var id, prev string
 			ids := make(map[string]bool)
 			for i := 0; i < 1000000; i++ {
 				id = GeneratePushID()
