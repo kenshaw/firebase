@@ -140,12 +140,12 @@ func main() {
 
 	// create authenticated "admin" ref
 	adminDB := db.Ref("/people")
-	adminDB.SetQueryOptions(
+	firebase.DefaultQueryOptions(
 		firebase.AuthOverride(map[string]interface{}{
 			"uid":   "<admin>",
 			"admin": true,
 		}),
-	)
+	)(adminDB)
 
 	// retrieve a shallow map (ie, the keys) using the admin ref
 	log.Printf("retrieving all keys as admin")
@@ -194,7 +194,7 @@ func main() {
 }
 
 // startListen starts a listener on the ref.
-func startListen(r *firebase.Ref, ctxt context.Context) {
+func startListen(r *firebase.DatabaseRef, ctxt context.Context) {
 	eventTypes := []firebase.EventType{
 		firebase.EventTypePut,
 		firebase.EventTypePatch,

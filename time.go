@@ -1,20 +1,23 @@
 package firebase
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
 	"strconv"
 	"time"
 )
 
 const (
+	// serverTimestampValue is the special value sent to Firebase for server
+	// timestamps.
 	serverTimestampValue = `{".sv":"timestamp"}`
 )
 
 // ServerTimestamp provides a json.Marshal'able (and Unmarshal'able) type for
 // use with Firebase.
+//
+// When this type has a zero value, and is serialized to Firebase, Firebase
+// will store the current time in milliseconds since the Unix epoch. When the
+// value is unserialized from Firebase, then the stored time (ie, milliseconds
+// since the Unix epoch) will be returned.
 type ServerTimestamp time.Time
 
 // MarshalJSON satisfies the json.Marshaler interface.
@@ -65,8 +68,8 @@ func (st ServerTimestamp) String() string {
 // Time provides a json.Marshal'able (and Unmarshal'able) type for that is
 // compatible with Firebase server timestamps.
 //
-// The JSON representation of time is a JSON number of milliseconds since the
-// Unix epoch.
+// The Firebase representation of time is a JSON Number of milliseconds since
+// the Unix epoch.
 type Time time.Time
 
 // MarshalJSON satisfies the json.Marshaler interface.
@@ -111,35 +114,4 @@ type Error struct {
 // Error satisifies the error interface.
 func (e *Error) Error() string {
 	return "firebase: " + e.Err
-}
-
-// checkServerError looks at a http.Response and determines if it encountered
-// an error, and marshals the error into a Error if it did.
-func checkServerError(res *http.Response) error {
-	// some kind of server error
-	if res.StatusCode < 200 || res.StatusCode > 299 {
-		buf, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return &Error{
-				Err: fmt.Sprintf("unable to read server error: %v", err),
-			}
-		}
-		if len(buf) < 1 {
-			return &Error{
-				Err: fmt.Sprintf("empty server error: %s (%d)", res.Status, res.StatusCode),
-			}
-		}
-
-		var e Error
-		err = json.Unmarshal(buf, &e)
-		if err != nil {
-			return &Error{
-				Err: fmt.Sprintf("unknown server error: %s (%d)", string(buf), res.StatusCode),
-			}
-		}
-
-		return &e
-	}
-
-	return nil
 }

@@ -19,24 +19,26 @@ import (
 )
 
 const (
-	// DefaultTokenExpiration is the default expiration for generated OAuth2 tokens.
+	// DefaultTokenExpiration is the default expiration for generated OAuth2
+	// tokens.
 	DefaultTokenExpiration = 1 * time.Hour
 )
 
-// requiredScopes are the oauth2 scopes required for Google's service accounts
-// when using with firebase.
+// requiredScopes are the oauth2 scopes required when using Google service
+// accounts with firebase.
 var requiredScopes = []string{
 	"https://www.googleapis.com/auth/userinfo.email",
 	"https://www.googleapis.com/auth/firebase.database",
-	//"https://www.googleapis.com/auth/identitytoolkit", // will this be required in the future?
+	// will this be required in the future?
+	//"https://www.googleapis.com/auth/identitytoolkit",
 }
 
-// Option is an option to modify a Firebase ref.
-type Option func(r *Ref) error
+// Option is an option to modify a Firebase database ref.
+type Option func(r *DatabaseRef) error
 
-// URL is an option to set Firebase base URL.
+// URL is an option to set Firebase database base ref (ie, URL) to urlstr.
 func URL(urlstr string) Option {
-	return func(r *Ref) error {
+	return func(r *DatabaseRef) error {
 		u, err := url.Parse(urlstr)
 		if err != nil {
 			return fmt.Errorf("could not parse url: %v", err)
@@ -48,10 +50,10 @@ func URL(urlstr string) Option {
 	}
 }
 
-// ProjectID is an option that sets the Firebase base URL as
+// ProjectID is an option that sets the Firebase database base ref (ie, URL) as
 // https://<projectID>.firebaseio.com/.
 func ProjectID(projectID string) Option {
-	return func(r *Ref) error {
+	return func(r *DatabaseRef) error {
 		if projectID == "" {
 			return errors.New("project id cannot be empty")
 		}
@@ -67,9 +69,9 @@ func ProjectID(projectID string) Option {
 }
 
 // Transport is an option to set the underlying HTTP transport used when making
-// requests against a Firebase ref.
+// requests against a Firebase database ref.
 func Transport(roundTripper http.RoundTripper) Option {
-	return func(r *Ref) error {
+	return func(r *DatabaseRef) error {
 		r.transport = roundTripper
 		return nil
 	}
@@ -78,19 +80,20 @@ func Transport(roundTripper http.RoundTripper) Option {
 // WatchBufferLen is an option that sets the channel buffer size for the
 // returned event channels from Watch and Listen.
 func WatchBufferLen(len int) Option {
-	return func(r *Ref) error {
+	return func(r *DatabaseRef) error {
 		r.watchBufLen = len
 		return nil
 	}
 }
 
 // GoogleServiceAccountCredentialsJSON is an option that loads Google Service
-// Account credentials for use with the Firebase ref from a JSON encoded buf.
+// Account credentials for use with the Firebase database ref from a JSON
+// encoded buf.
 //
 // Google Service Account credentials can be downloaded from the Google Cloud
 // console: https://console.cloud.google.com/iam-admin/serviceaccounts/
 func GoogleServiceAccountCredentialsJSON(buf []byte) Option {
-	return func(r *Ref) error {
+	return func(r *DatabaseRef) error {
 		var err error
 
 		// load service account credentials
@@ -134,12 +137,13 @@ func GoogleServiceAccountCredentialsJSON(buf []byte) Option {
 }
 
 // GoogleServiceAccountCredentialsFile is an option that loads Google Service
-// Account credentials for use with the Firebase ref from the specified file.
+// Account credentials for use with the Firebase database ref from the
+// specified file.
 //
 // Google Service Account credentials can be downloaded from the Google Cloud
 // console: https://console.cloud.google.com/iam-admin/serviceaccounts/
 func GoogleServiceAccountCredentialsFile(path string) Option {
-	return func(r *Ref) error {
+	return func(r *DatabaseRef) error {
 		buf, err := ioutil.ReadFile(path)
 		if err != nil {
 			return fmt.Errorf("could not read google service account credentials file: %v", err)
@@ -154,7 +158,7 @@ func GoogleServiceAccountCredentialsFile(path string) Option {
 // If serviceAccount is empty, then the default service account credentials
 // associated with the GCE instance will be used.
 func GoogleComputeCredentials(serviceAccount string) Option {
-	return func(r *Ref) error {
+	return func(r *DatabaseRef) error {
 		var err error
 
 		// get compute metadata scopes associated with the service account
@@ -199,26 +203,30 @@ func GoogleComputeCredentials(serviceAccount string) Option {
 }
 
 // DefaultQueryOptions is an option that sets the default query options on the
-// ref.
+// database ref.
 func DefaultQueryOptions(opts ...QueryOption) Option {
-	return func(r *Ref) error {
-		r.SetQueryOptions(opts...)
+	return func(r *DatabaseRef) error {
+		r.rw.Lock()
+		defer r.rw.Unlock()
+
+		r.queryOpts = opts
+
 		return nil
 	}
 }
 
-// DefaultAuthOverride is an  option that sets the default
-// auth_variable_override variable.
+// DefaultAuthOverride is an option that sets the default
+// auth_variable_override variable on the database ref.
 func DefaultAuthOverride(val interface{}) Option {
-	return func(r *Ref) error {
+	return func(r *DatabaseRef) error {
 		return DefaultQueryOptions(AuthOverride(val))(r)
 	}
 }
 
 // DefaultAuthUID is an option that sets the default auth user id ("uid") via
-// the auth_variable_override on the ref.
+// the auth_variable_override on the database ref.
 func DefaultAuthUID(uid string) Option {
-	return func(r *Ref) error {
+	return func(r *DatabaseRef) error {
 		return DefaultQueryOptions(AuthUID(uid))(r)
 	}
 }
@@ -254,7 +262,7 @@ type Logf func(string, ...interface{})
 //
 // NOTE: this Option will not work with Watch/Listen.
 func Log(requestLogf, responseLogf Logf) Option {
-	return func(r *Ref) error {
+	return func(r *DatabaseRef) error {
 		return Transport(&httpLogger{
 			transport:    r.transport,
 			requestLogf:  requestLogf,
