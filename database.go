@@ -179,7 +179,7 @@ func SetRulesJSON(r *DatabaseRef, buf []byte) error {
 // GetRulesJSON retrieves the security rules for Firebase database ref r.
 func GetRulesJSON(r *DatabaseRef) ([]byte, error) {
 	var d json.RawMessage
-	err := Do(OpTypeSet, r.Ref("/.settings/rules"), nil, &d)
+	err := Do(OpTypeGet, r.Ref("/.settings/rules"), nil, &d)
 	if err != nil {
 		return nil, err
 	}
