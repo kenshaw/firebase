@@ -12,7 +12,7 @@ import (
 var (
 	flagCredentials = flag.String("creds", "", "path to google service account credentials")
 	flagRulesFile   = flag.String("rules", "rules.json", "path to rules file")
-	flagNoSave      = flag.Bool("nosave", true, "don't save existing rules")
+	flagNoSave      = flag.Bool("nosave", false, "don't save existing rules before writing new rules")
 	flagClearRules  = flag.Bool("clear", false, "clear rules")
 	flagClearValue  = flag.String("val", "false", "clear rule value")
 )
@@ -48,7 +48,7 @@ func main() {
 	}
 
 	// save existing rules
-	if *flagNoSave {
+	if !*flagNoSave {
 		existing, err := ref.GetRulesJSON()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
