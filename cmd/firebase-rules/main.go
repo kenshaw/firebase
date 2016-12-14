@@ -70,7 +70,7 @@ func main() {
 	}
 }
 
-// emptyRules are the empty rule set for firebase (allow no reads/writes).
+// emptyRules are the empty rule set for firebase (allow/disallow reads/writes).
 const emptyRules = `{
   "rules": {
     ".read": "%s",
