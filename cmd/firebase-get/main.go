@@ -14,6 +14,7 @@ var (
 	flagCredentials = flag.String("creds", "", "path to google service account credentials")
 	flagRef         = flag.String("ref", "/", "firebase ref to retrieve")
 	flagVerbose     = flag.Bool("v", false, "verbose logging")
+	flagRules       = flag.Bool("rules", false, "retrieve rules")
 )
 
 func main() {
@@ -43,18 +44,27 @@ func main() {
 	}
 
 	// retrieve ref
-	var v interface{}
-	err = ref.Ref(*flagRef).Get(&v)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
-	}
+	var buf []byte
+	if !*flagRules {
+		var v interface{}
+		err = ref.Ref(*flagRef).Get(&v)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
 
-	// pretty format
-	buf, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
+		// pretty format
+		buf, err = json.MarshalIndent(v, "", "  ")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
+	} else {
+		buf, err = ref.Ref(*flagRef).GetRulesJSON()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
 	}
 
 	fmt.Fprintf(os.Stdout, "%s\n", string(buf))
