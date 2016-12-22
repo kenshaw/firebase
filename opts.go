@@ -237,7 +237,7 @@ type httpLogger struct {
 	requestLogf, responseLogf Logf
 }
 
-// RoundTrip satisifies the http.RoundTripper interface.
+// RoundTrip satisfies the http.RoundTripper interface.
 func (hl *httpLogger) RoundTrip(req *http.Request) (*http.Response, error) {
 	trans := hl.transport
 	if trans == nil {

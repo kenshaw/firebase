@@ -111,7 +111,7 @@ type Error struct {
 	Err string `json:"error"`
 }
 
-// Error satisifies the error interface.
+// Error satisfies the error interface.
 func (e *Error) Error() string {
 	return "firebase: " + e.Err
 }
