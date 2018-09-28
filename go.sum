@@ -1,0 +1,10 @@
+cloud.google.com/go v0.28.0 h1:KZ/88LWSw8NxMkjdQyX7LQSGR9PkHr4PaVuNm8zgFq0=
+cloud.google.com/go v0.28.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
+github.com/knq/jwt v0.0.0-20180925223530-fc44a4704737 h1:1xIW/VaRuKqTia61AXVrIFt2wDeIgXyVmSFU6wX1cx4=
+github.com/knq/jwt v0.0.0-20180925223530-fc44a4704737/go.mod h1:H6bRgq8JMACag/WS+QyO3B00Hx9JZTF/zUHxNhzkxqo=
+github.com/knq/pemutil v0.0.0-20180607233853-a6a7785bc45a h1:IPa47OrAMfRqw3RENZIMQF4rwU7doG3rNmvdzeeVYYQ=
+github.com/knq/pemutil v0.0.0-20180607233853-a6a7785bc45a/go.mod h1:2VjBu5gkjU1wG99pRhJ+zm/P4bHnjdRY0CIMP9Gvn7Q=
+golang.org/x/net v0.0.0-20180926154720-4dfa2610cdf3 h1:dgd4x4kJt7G4k4m93AYLzM8Ni6h2qLTfh9n9vXJT3/0=
+golang.org/x/net v0.0.0-20180926154720-4dfa2610cdf3/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
+golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be h1:vEDujvNQGv4jgYKudGeI/+DAX4Jffq6hpD55MmoEvKs=
+golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be/go.mod h1:N/0e6XlmueqKjAGxoOufVs8QHGRruUQn6yWY3a++T0U=
